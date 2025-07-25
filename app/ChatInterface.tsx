@@ -323,7 +323,7 @@ export function ChatInterface({
               value={input}
               onChange={handleInputChange}
               placeholder="Ask me anything..."
-              className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[2.5rem] max-h-32 overflow-y-auto"
+              className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[3rem] max-h-32 overflow-y-auto"
               disabled={isLoading}
               rows={1}
               onInput={(e) => {

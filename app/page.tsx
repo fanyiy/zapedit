@@ -177,11 +177,10 @@ export default function Home() {
   // Keyboard shortcuts
   useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
-      // Don't trigger shortcuts when typing in input
-      if (e.target instanceof HTMLInputElement) {
+      // Don't trigger shortcuts when typing in input fields or textareas
+      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) {
         if (e.key === "Escape") {
-  
-          (e.target as HTMLInputElement).blur();
+          (e.target as HTMLInputElement | HTMLTextAreaElement).blur();
         }
         return;
       }
