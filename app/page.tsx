@@ -4,7 +4,7 @@ import Image, { getImageProps } from "next/image";
 import { useRef, useState, useTransition, useEffect, useCallback } from "react";
 import { generateImage } from "./actions";
 import { ImageUploader } from "./ImageUploader";
-import { Fieldset } from "./Fieldset";
+
 import Spinner from "./Spinner";
 import ScanningEffect from "./ScanningEffect";
 import { preloadNextImage } from "@/lib/preload-next-image";
@@ -13,7 +13,7 @@ import { SampleImages } from "./SampleImages";
 import { DownloadIcon } from "./components/DownloadIcon";
 import { toast } from "sonner";
 import { SuggestedPrompts } from "./suggested-prompts/SuggestedPrompts";
-import { flushSync } from "react-dom";
+
 import { ChatInterface } from "./ChatInterface";
 
 type Image = {
@@ -31,10 +31,10 @@ export default function Home() {
   const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
-  const [prompt, setPrompt] = useState("");
-  const formRef = useRef<HTMLFormElement>(null);
+
   const imageContainerRef = useRef<HTMLDivElement>(null);
   const [imageLoading, setImageLoading] = useState(false);
+  const [selectedSuggestion, setSelectedSuggestion] = useState<string | null>(null);
 
   const activeImage = images.find((i) => i.url === activeImageUrl);
 
@@ -175,7 +175,7 @@ export default function Home() {
       // Don't trigger shortcuts when typing in input
       if (e.target instanceof HTMLInputElement) {
         if (e.key === "Escape") {
-          setPrompt("");
+  
           (e.target as HTMLInputElement).blur();
         }
         return;
@@ -202,7 +202,7 @@ export default function Home() {
           break;
         case "/":
           e.preventDefault();
-          document.querySelector<HTMLInputElement>('input[name="prompt"]')?.focus();
+          // Input focus removed since we now use AI agent
           break;
       }
     }
@@ -263,7 +263,7 @@ export default function Home() {
                       activeImageUrl === image.url
                         ? "text-white"
                         : "text-muted-foreground",
-                      "w-4 shrink-0 font-mono text-xs max-md:hidden",
+                      "w-4 shrink-0 font-mono text-[11px] max-md:hidden",
                     )}
                   >
                     v{image.version}
@@ -370,7 +370,27 @@ export default function Home() {
               </div>
             ) : (
               <div className="flex flex-col h-full relative min-h-0">
-                {/* Image Display Area */}
+                {/* Image Info Header */}
+                <div className="flex items-center justify-between mb-3 px-2">
+                  <div className="flex items-center gap-3">
+                    <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-muted border border-border font-mono text-xs text-foreground" aria-label={`Version ${activeImage.version}`}>
+                      v{activeImage.version}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {imageData.width} × {imageData.height}
+                    </span>
+                  </div>
+                  <button
+                    title="Download image (Cmd/Ctrl + D)"
+                    onClick={handleDownload}
+                    className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-muted border border-border text-foreground transition hover:bg-muted/80 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    aria-label="Download current image"
+                  >
+                    <DownloadIcon aria-hidden="true" />
+                  </button>
+                </div>
+
+                {/* Clean Image Display Area */}
                 <div 
                   ref={imageContainerRef}
                   className="flex-1 relative flex items-center justify-center touch-pan-y select-none bg-gray-900 rounded-xl overflow-hidden min-h-0"
@@ -390,7 +410,12 @@ export default function Home() {
                         aspectRatio: imageData.width / imageData.height,
                       }}
                       alt={`Generated image version ${activeImage.version}${activeImage.prompt ? `: ${activeImage.prompt}` : ''}`}
-                      className="object-contain max-md:max-h-[50vh] md:max-h-[70vh] pointer-events-none"
+                      className={clsx(
+                        "object-contain pointer-events-none",
+                        imageData.height > imageData.width 
+                          ? "max-md:max-h-[60vh] md:max-h-[80vh]" // Portrait: show full height
+                          : "max-md:max-w-[90vw] md:max-w-full" // Landscape: show full width
+                      )}
                       priority
                     />
 
@@ -414,42 +439,6 @@ export default function Home() {
                       </>
                     )}
 
-                    {/* Top overlay with version and download */}
-                    <div className="absolute top-0 left-0 right-0 bg-gradient-to-b from-black/80 via-black/50 to-transparent p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <div className="flex size-7 shrink-0 items-center justify-center rounded-full bg-white/20 backdrop-blur-sm font-mono text-xs text-white border border-white/20" aria-label={`Version ${activeImage.version}`}>
-                            v{activeImage.version}
-                          </div>
-                        </div>
-                        <button
-                          title="Download image (Cmd/Ctrl + D)"
-                          onClick={handleDownload}
-                          className="flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full bg-white/20 backdrop-blur-sm text-white border border-white/20 transition hover:bg-white/30 focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent"
-                          aria-label="Download current image"
-                        >
-                          <DownloadIcon aria-hidden="true" />
-                        </button>
-                      </div>
-                    </div>
-
-                    {/* Bottom overlay with prompt */}
-                    {activeImage.prompt && (
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/90 via-black/60 to-transparent p-4">
-                        <div className="space-y-1">
-                          <p className="text-xs text-white/60 font-medium uppercase tracking-wide">
-                            Prompt
-                          </p>
-                          <p className="text-sm text-white leading-relaxed" title={activeImage.prompt}>
-                            {activeImage.prompt}
-                          </p>
-                        </div>
-                      </div>
-                    )}
-
-                    {/* Ring border overlay */}
-                    <div className="pointer-events-none absolute inset-0 rounded-xl ring ring-white/10 ring-inset" />
-
                     {/* Loading overlays */}
                     {pending && (
                       <ScanningEffect />
@@ -463,91 +452,33 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Bottom section with suggestions and input */}
+                {/* Prompt Display Below Image */}
+                {activeImage.prompt && (
+                  <div className="mt-3 px-2">
+                    <div className="bg-muted/50 border border-border rounded-lg p-3">
+                      <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
+                        Prompt
+                      </p>
+                      <p className="text-xs text-foreground leading-relaxed" title={activeImage.prompt}>
+                        {activeImage.prompt}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bottom section with suggestions */}
                 <div className="flex-shrink-0 space-y-3 mt-4">
                   {/* Floating Suggestions */}
                   <div>
                     <SuggestedPrompts
                       imageUrl={activeImage.url}
                       onSelect={(suggestion) => {
-                        flushSync(() => {
-                          setPrompt(suggestion);
-                        });
-                        formRef.current?.requestSubmit();
+                        setSelectedSuggestion(suggestion);
                       }}
                     />
                   </div>
 
-                  {/* Chat Input Bar */}
-                <form
-                  ref={formRef}
-                  className="flex items-center gap-2 px-3 py-2 bg-gray-800 border border-border rounded-full shadow-sm"
-                  role="search"
-                  aria-label="Edit image with AI prompt"
-                  action={(formData) => {
-                    startTransition(async () => {
-                      const prompt = formData.get("prompt") as string;
 
-                      const generation = await generateImage({
-                        imageUrl: activeImage.url,
-                        prompt,
-                        width: imageData.width,
-                        height: imageData.height,
-                      });
-
-                      if (generation.success) {
-                        await preloadNextImage({
-                          src: generation.url,
-                          width: imageData.width,
-                          height: imageData.height,
-                        });
-                        setImages((current) => [
-                          ...current,
-                          {
-                            url: generation.url,
-                            prompt,
-                            version: current.length,
-                          },
-                        ]);
-                        setActiveImageUrl(generation.url);
-                        setPrompt("");
-                      } else {
-                        toast.error(generation.error || "Failed to edit image");
-                      }
-                    });
-                  }}
-                >
-                  <Fieldset className="flex-1">
-                    <label htmlFor="prompt-input" className="sr-only">
-                      Describe the changes you want to make to the image
-                    </label>
-                    <input
-                      id="prompt-input"
-                      type="text"
-                      name="prompt"
-                      className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm px-2 py-1 leading-normal"
-                      value={prompt}
-                      onChange={(e) => setPrompt(e.target.value)}
-                      placeholder="Describe the changes you want to make..."
-                      required
-                      disabled={pending}
-                    />
-                  </Fieldset>
-                  <button
-                    type="submit"
-                    disabled={!prompt.trim() || pending}
-                    className="bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 disabled:opacity-50 transition-colors flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-sm"
-                    aria-label={pending ? "Processing your request..." : "Send prompt to edit image"}
-                  >
-                    {pending ? (
-                      <Spinner className="w-4 h-4" aria-hidden="true" />
-                    ) : (
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19V5m-7 7l7-7 7 7" />
-                      </svg>
-                    )}
-                  </button>
-                </form>
 
                   {/* Navigation hints */}
                   {images.length > 1 && (
@@ -568,10 +499,12 @@ export default function Home() {
         </div>
         
         {activeImage && (
-          <ChatInterface 
-            activeImageUrl={activeImageUrl}
-            imageData={imageData}
-            onImageGenerated={async (imageUrl: string, prompt: string) => {
+                      <ChatInterface
+              activeImageUrl={activeImageUrl}
+              imageData={imageData}
+              selectedSuggestion={selectedSuggestion}
+              onSuggestionUsed={() => setSelectedSuggestion(null)}
+              onImageGenerated={async (imageUrl: string, prompt: string) => {
               // Preload the new image
               await preloadNextImage({
                 src: imageUrl,

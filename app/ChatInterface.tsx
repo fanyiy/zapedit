@@ -12,12 +12,16 @@ import { Bot, Palette, CheckCircle, XCircle, Search, Undo2, Lightbulb } from 'lu
 interface ChatInterfaceProps {
   activeImageUrl: string | null;
   imageData: { width: number; height: number };
+  selectedSuggestion?: string | null;
+  onSuggestionUsed?: () => void;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
 }
 
 export function ChatInterface({ 
   activeImageUrl, 
   imageData = { width: 1024, height: 768 },
+  selectedSuggestion,
+  onSuggestionUsed,
   onImageGenerated 
 }: ChatInterfaceProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -29,6 +33,7 @@ export function ChatInterface({
     handleInputChange,
     handleSubmit,
     isLoading,
+    setInput,
   } = useChat({
     api: '/api/chat',
     body: {
@@ -49,6 +54,14 @@ export function ChatInterface({
   React.useEffect(() => {
     scrollToBottom();
   }, [messages.length, isLoading, scrollToBottom]);
+
+  // Handle selected suggestions
+  React.useEffect(() => {
+    if (selectedSuggestion) {
+      setInput(selectedSuggestion);
+      onSuggestionUsed?.();
+    }
+  }, [selectedSuggestion, setInput, onSuggestionUsed]);
 
   // Handle tool calls for image editing
   React.useEffect(() => {
@@ -307,20 +320,32 @@ export function ChatInterface({
 
       {/* Input */}
       <div className="p-4">
-        <form onSubmit={handleSubmit} className="flex items-center gap-2 px-3 py-2 bg-input border border-border rounded-xl shadow-sm">
+        <form onSubmit={handleSubmit} className="relative bg-input border border-border rounded-xl shadow-sm">
           <Fieldset className="flex-1">
-            <input
+            <textarea
               value={input}
               onChange={handleInputChange}
-              placeholder="Tell me what you'd like to do with your image..."
-              className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-sm px-2 py-1 leading-normal"
+              placeholder="Ask me anything..."
+              className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[2.5rem] max-h-24"
               disabled={isLoading}
+              rows={1}
+              onInput={(e) => {
+                const target = e.target as HTMLTextAreaElement;
+                target.style.height = 'auto';
+                target.style.height = Math.min(target.scrollHeight, 96) + 'px';
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit(e as any);
+                }
+              }}
             />
           </Fieldset>
           <button
             type="submit"
             disabled={!input.trim() || isLoading}
-            className="bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-sm hover:scale-105"
+            className="absolute bottom-2 right-2 bg-primary text-primary-foreground p-2 rounded-full hover:bg-primary/90 disabled:opacity-50 transition-all duration-200 flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background shadow-sm hover:scale-105"
             title={isLoading ? "Agent is working..." : "Send message to AI agent"}
           >
             {isLoading ? (
