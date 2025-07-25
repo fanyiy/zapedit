@@ -80,8 +80,7 @@ export async function POST(req: Request) {
           context: z.string().optional().describe('Additional context about what the user is looking for'),
           style: z.enum(['creative', 'professional', 'artistic', 'technical']).optional().describe('The style of suggestions to generate'),
         }),
-        execute: async ({ imageUrl: providedImageUrl, context = '', style = 'creative' }) => {
-          const finalImageUrl = providedImageUrl || activeImageUrl;
+        execute: async ({ context = '', style = 'creative' }) => {
           const suggestionSets = {
             creative: [
               "Add magical sparkles and fairy lights",
@@ -137,8 +136,7 @@ export async function POST(req: Request) {
         parameters: z.object({
           imageUrl: z.string().optional().describe('The URL of the image to analyze (defaults to current image)'),
         }),
-        execute: async ({ imageUrl: providedImageUrl }) => {
-          const finalImageUrl = providedImageUrl || activeImageUrl;
+        execute: async () => {
           // This is a mock analysis - in a real implementation, you could use vision models
           return {
             action: 'analysis',

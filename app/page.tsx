@@ -1,7 +1,7 @@
 "use client";
 
 import Image, { getImageProps } from "next/image";
-import { useRef, useState, useTransition, useEffect } from "react";
+import { useRef, useState, useTransition, useEffect, useCallback } from "react";
 import { generateImage } from "./actions";
 import { ImageUploader } from "./ImageUploader";
 import { Fieldset } from "./Fieldset";
@@ -50,6 +50,80 @@ export default function Home() {
     };
   }, []);
 
+  const navigateToPreviousVersion = useCallback(async () => {
+    if (!activeImage || images.length <= 1 || imageLoading) return;
+    const currentIndex = images.findIndex(img => img.url === activeImageUrl);
+    const prevIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
+    const targetImage = images[prevIndex];
+    
+    setImageLoading(true);
+    await preloadNextImage({
+      src: targetImage.url,
+      width: imageData.width,
+      height: imageData.height,
+    });
+    setActiveImageUrl(targetImage.url);
+    setImageLoading(false);
+  }, [activeImage, images, imageLoading, activeImageUrl, imageData]);
+
+  const navigateToNextVersion = useCallback(async () => {
+    if (!activeImage || images.length <= 1 || imageLoading) return;
+    const currentIndex = images.findIndex(img => img.url === activeImageUrl);
+    const nextIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
+    const targetImage = images[nextIndex];
+    
+    setImageLoading(true);
+    await preloadNextImage({
+      src: targetImage.url,
+      width: imageData.width,
+      height: imageData.height,
+    });
+    setActiveImageUrl(targetImage.url);
+    setImageLoading(false);
+  }, [activeImage, images, imageLoading, activeImageUrl, imageData]);
+
+  const handleDownload = useCallback(async () => {
+    if (!activeImage) return;
+
+    try {
+      const imageProps = getImageProps({
+        src: activeImage.url,
+        alt: "Generated image",
+        height: imageData.height,
+        width: imageData.width,
+        quality: 100,
+      });
+
+      // Fetch the image
+      const response = await fetch(imageProps.props.src);
+      const blob = await response.blob();
+
+      const extension = blob.type.includes("jpeg")
+        ? "jpg"
+        : blob.type.includes("png")
+          ? "png"
+          : blob.type.includes("webp")
+            ? "webp"
+            : "bin";
+
+      // Create a download link
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `image-v${activeImage.version}.${extension}`;
+      document.body.appendChild(link);
+      link.click();
+
+      // Cleanup
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success("Image downloaded successfully!");
+    } catch {
+      toast.error("Failed to download image");
+    }
+  }, [activeImage, imageData]);
+
   // Touch/swipe handling for mobile
   useEffect(() => {
     if (!activeImage || images.length <= 1) return;
@@ -93,7 +167,7 @@ export default function Home() {
       container.removeEventListener('touchstart', handleTouchStart);
       container.removeEventListener('touchend', handleTouchEnd);
     };
-  }, [activeImage, images]);
+  }, [activeImage, images, navigateToPreviousVersion, navigateToNextVersion]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -135,39 +209,9 @@ export default function Home() {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [activeImage, images]);
+  }, [activeImage, images, navigateToPreviousVersion, navigateToNextVersion, handleDownload]);
 
-  async function navigateToPreviousVersion() {
-    if (!activeImage || images.length <= 1 || imageLoading) return;
-    const currentIndex = images.findIndex(img => img.url === activeImageUrl);
-    const prevIndex = currentIndex > 0 ? currentIndex - 1 : images.length - 1;
-    const targetImage = images[prevIndex];
-    
-    setImageLoading(true);
-    await preloadNextImage({
-      src: targetImage.url,
-      width: imageData.width,
-      height: imageData.height,
-    });
-    setActiveImageUrl(targetImage.url);
-    setImageLoading(false);
-  }
 
-  async function navigateToNextVersion() {
-    if (!activeImage || images.length <= 1 || imageLoading) return;
-    const currentIndex = images.findIndex(img => img.url === activeImageUrl);
-    const nextIndex = currentIndex < images.length - 1 ? currentIndex + 1 : 0;
-    const targetImage = images[nextIndex];
-    
-    setImageLoading(true);
-    await preloadNextImage({
-      src: targetImage.url,
-      width: imageData.width,
-      height: imageData.height,
-    });
-    setActiveImageUrl(targetImage.url);
-    setImageLoading(false);
-  }
 
   function handleDeleteVersion(imageUrl: string) {
     const updatedImages = images.filter(img => img.url !== imageUrl);
@@ -183,56 +227,9 @@ export default function Home() {
     }
   }
 
-  async function handleDownload() {
-    if (!activeImage) return;
 
-    try {
-      const imageProps = getImageProps({
-        src: activeImage.url,
-        alt: "Generated image",
-        height: imageData.height,
-        width: imageData.width,
-        quality: 100,
-      });
 
-      // Fetch the image
-      const response = await fetch(imageProps.props.src);
-      const blob = await response.blob();
 
-      const extension = blob.type.includes("jpeg")
-        ? "jpg"
-        : blob.type.includes("png")
-          ? "png"
-          : blob.type.includes("webp")
-            ? "webp"
-            : "bin";
-
-      // Create a download link
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `image-v${activeImage.version}.${extension}`;
-      document.body.appendChild(link);
-      link.click();
-
-      // Cleanup
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-
-      toast.success("Image downloaded successfully!");
-    } catch {
-      toast.error("Failed to download image");
-    }
-  }
-
-  async function handleAIEditImage(prompt: string) {
-    if (!activeImage) return;
-    
-    setPrompt(prompt);
-    setTimeout(() => {
-      formRef.current?.requestSubmit();
-    }, 100);
-  }
 
   return (
     <>
@@ -574,7 +571,6 @@ export default function Home() {
           <ChatInterface 
             activeImageUrl={activeImageUrl}
             imageData={imageData}
-            onEditImage={handleAIEditImage}
             onImageGenerated={async (imageUrl: string, prompt: string) => {
               // Preload the new image
               await preloadNextImage({

@@ -11,15 +11,13 @@ import { Bot, Palette, CheckCircle, XCircle, Search, Undo2, Lightbulb } from 'lu
 
 interface ChatInterfaceProps {
   activeImageUrl: string | null;
-  imageData?: { width: number; height: number };
-  onEditImage: (prompt: string) => void;
-  onImageGenerated?: (imageUrl: string, prompt: string) => void;
+  imageData: { width: number; height: number };
+  onImageGenerated: (imageUrl: string, prompt: string) => void;
 }
 
 export function ChatInterface({ 
   activeImageUrl, 
   imageData = { width: 1024, height: 768 },
-  onEditImage,
   onImageGenerated 
 }: ChatInterfaceProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
@@ -31,7 +29,6 @@ export function ChatInterface({
     handleInputChange,
     handleSubmit,
     isLoading,
-    append,
   } = useChat({
     api: '/api/chat',
     body: {
@@ -117,9 +114,9 @@ export function ChatInterface({
           <div className="text-muted-foreground text-sm">
             <div className="flex items-center gap-2 mb-3">
               <Bot className="w-4 h-4" />
-              <p>Hi! I'm your AI image editing agent.</p>
+              <p>Hi! I&apos;m your AI image editing agent.</p>
             </div>
-            <p className="mb-4 leading-relaxed">I can see your current image and I'm ready to edit it! Tell me what changes you'd like to make.</p>
+            <p className="mb-4 leading-relaxed">I can see your current image and I&apos;m ready to edit it! Tell me what changes you&apos;d like to make.</p>
             <div className="rounded-xl bg-muted/50 border border-border p-3">
               <p className="text-xs font-medium text-foreground mb-2">I can help with:</p>
               <ul className="space-y-1 text-xs">
