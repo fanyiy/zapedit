@@ -61,7 +61,7 @@ export function ImageUploader({
         fileInputRef.current?.click();
       }}
       className={clsx(
-        "relative flex aspect-[3/2] w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
+        "relative flex aspect-[5/2] w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
         isDragging
           ? "border-white bg-white/5 scale-[1.02]"
           : "border-border hover:border-muted-foreground hover:bg-muted/20",
@@ -70,23 +70,17 @@ export function ImageUploader({
     >
       {!pending ? (
         <div className="text-center">
-          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted border border-border">
-            <svg className="h-8 w-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted border border-border">
+            <svg className="h-6 w-6 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 4v16m8-8H4" />
             </svg>
           </div>
-          <h3 className="text-xl font-medium text-white mb-3">
+          <h3 className="text-lg font-medium text-white mb-2">
             Drop your image here
           </h3>
-          <p className="text-muted-foreground text-base mb-6">
+          <p className="text-muted-foreground text-sm">
             or click to browse files
           </p>
-          <div className="inline-flex items-center gap-2 rounded-xl bg-white text-black px-6 py-3 text-sm font-medium transition-all hover:bg-gray-200 hover:scale-105">
-            <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-            </svg>
-            Choose File
-          </div>
         </div>
       ) : (
         <div className="text-center">
