@@ -181,10 +181,10 @@ export function ChatInterface({
                 case 'text':
                   return (
                     <div key={`${message.id}-${i}`} className={clsx(
-                      "text-sm leading-relaxed",
+                      "text-xs leading-relaxed",
                       message.role === 'user' 
                         ? "text-foreground mr-4" 
-                        : "text-foreground ml-4"
+                        : "text-foreground mr-4"
                     )}>
                       {message.role === 'user' ? (
                         part.text
@@ -206,7 +206,7 @@ export function ChatInterface({
                     
                     return (
                       <div key={`${message.id}-${i}`} className={clsx(
-                        "border rounded-xl p-3 ml-4",
+                        "border rounded-xl p-3 mr-4",
                         isSuccess ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" :
                         isError ? "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800" :
                         "bg-muted/80 border-border"
@@ -226,7 +226,7 @@ export function ChatInterface({
                              'Editing Image'}
                           </div>
                         </div>
-                        <div className="text-sm text-foreground">
+                        <div className="text-xs text-foreground">
                           {'result' in toolInvocation && toolInvocation.result?.message 
                             ? toolInvocation.result.message 
                             : `Applying: "${toolInvocation.args.prompt}"`}
@@ -237,12 +237,12 @@ export function ChatInterface({
 
                   if (toolInvocation.toolName === 'generateSuggestions') {
                     return (
-                      <div key={`${message.id}-${i}`} className="bg-muted/80 border border-border rounded-xl p-3 ml-4">
+                      <div key={`${message.id}-${i}`} className="bg-muted/80 border border-border rounded-xl p-3 mr-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Lightbulb className="w-3 h-3 text-primary" />
                           <div className="text-xs text-primary font-medium">Creative Suggestions</div>
                         </div>
-                        <div className="space-y-2 text-sm text-foreground">
+                        <div className="space-y-2 text-xs text-foreground">
                           {'result' in toolInvocation && toolInvocation.result?.suggestions && (
                             <div className="grid gap-2">
                               {toolInvocation.result.suggestions.map((suggestion: string, idx: number) => (
@@ -266,12 +266,12 @@ export function ChatInterface({
 
                   if (toolInvocation.toolName === 'analyzeImage') {
                     return (
-                      <div key={`${message.id}-${i}`} className="bg-muted/80 border border-border rounded-xl p-3 ml-4">
+                      <div key={`${message.id}-${i}`} className="bg-muted/80 border border-border rounded-xl p-3 mr-4">
                         <div className="flex items-center gap-2 mb-3">
                           <Search className="w-3 h-3 text-primary" />
                           <div className="text-xs text-primary font-medium">Image Analysis</div>
                         </div>
-                        <div className="space-y-2 text-sm text-foreground">
+                        <div className="space-y-2 text-xs text-foreground">
                           {'result' in toolInvocation && toolInvocation.result?.analysis && (
                             <div className="space-y-2">
                               {Object.entries(toolInvocation.result.analysis).map(([key, value]) => {
@@ -302,12 +302,12 @@ export function ChatInterface({
 
                   if (toolInvocation.toolName === 'undoLastEdit') {
                     return (
-                      <div key={`${message.id}-${i}`} className="bg-blue-50 border border-blue-200 dark:bg-blue-950 dark:border-blue-800 rounded-xl p-3 ml-4">
+                      <div key={`${message.id}-${i}`} className="bg-blue-50 border border-blue-200 dark:bg-blue-950 dark:border-blue-800 rounded-xl p-3 mr-4">
                         <div className="flex items-center gap-2 mb-2">
                           <Undo2 className="w-3 h-3 text-blue-700 dark:text-blue-300" />
                           <div className="text-xs text-blue-700 dark:text-blue-300 font-medium">Undo Guidance</div>
                         </div>
-                        <div className="text-sm text-foreground">
+                        <div className="text-xs text-foreground">
                           {'result' in toolInvocation && toolInvocation.result?.message}
                         </div>
                       </div>
@@ -321,7 +321,7 @@ export function ChatInterface({
         ))}
         
         {isLoading && (
-          <div className="flex items-center gap-3 text-muted-foreground text-sm">
+          <div className="flex items-center gap-3 text-muted-foreground text-xs">
             <Spinner className="size-4" />
             <span>Agent is working...</span>
           </div>
