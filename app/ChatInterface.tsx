@@ -342,7 +342,7 @@ export function ChatInterface({
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
-                  handleSubmit(e as any);
+                  handleSubmit(e as React.KeyboardEvent<HTMLTextAreaElement>);
                 }
               }}
             />

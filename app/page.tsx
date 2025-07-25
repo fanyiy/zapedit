@@ -1,8 +1,7 @@
 "use client";
 
 import Image, { getImageProps } from "next/image";
-import { useRef, useState, useTransition, useEffect, useCallback } from "react";
-import { generateImage } from "./actions";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { ImageUploader } from "./ImageUploader";
 
 import Spinner from "./Spinner";
@@ -34,7 +33,6 @@ export default function Home() {
     height: number;
   }>({ width: 1024, height: 768 });
   const [activeImageUrl, setActiveImageUrl] = useState<string | null>(null);
-  const [pending, startTransition] = useTransition();
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const imageContainerRef = useRef<HTMLDivElement>(null);
@@ -445,7 +443,7 @@ export default function Home() {
                         )}
 
                         {/* Loading overlays */}
-                        {pending && (
+                        {imageLoading && (
                           <ScanningEffect />
                         )}
 
