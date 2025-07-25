@@ -44,7 +44,7 @@ export async function generateImage(
         num_inference_steps: 28,
         guidance_scale: 2.5,
         num_images: 1,
-        enable_safety_checker: true,
+        enable_safety_checker: false,
         output_format: "jpeg",
         resolution_mode: "match_input",
       },
