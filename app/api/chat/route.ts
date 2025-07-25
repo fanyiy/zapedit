@@ -8,6 +8,14 @@ export const maxDuration = 30;
 export async function POST(req: Request) {
   const { messages, activeImageUrl, imageData } = await req.json();
 
+  // Avoid sending extremely long base64 data URLs to the language model – this can blow up
+  // the token count and cause the request to fail. If the current image is a data-URL we
+  // replace it with a short placeholder that still lets the model know an image is loaded.
+  const sanitizedImageUrlForPrompt =
+    typeof activeImageUrl === "string" && activeImageUrl.startsWith("data:")
+      ? "[user provided image]"
+      : activeImageUrl;
+
   const result = streamText({
     model: openai('gpt-4o'),
     maxSteps: 5,
@@ -22,8 +30,12 @@ export async function POST(req: Request) {
           height: z.number().optional().describe('The height of the image (defaults to current image height)'),
         }),
         execute: async ({ prompt, imageUrl: providedImageUrl, width: providedWidth, height: providedHeight }) => {
-          // Use provided values or fall back to current image context
-          const finalImageUrl = providedImageUrl || activeImageUrl;
+          // If the model provided an imageUrl that is just a placeholder (e.g. "[user provided image]")
+          // fall back to the actual image that is currently active.
+          let finalImageUrl = activeImageUrl;
+          if (providedImageUrl && !providedImageUrl.startsWith("[")) {
+            finalImageUrl = providedImageUrl;
+          }
           const finalWidth = providedWidth || imageData?.width || 1024;
           const finalHeight = providedHeight || imageData?.height || 768;
 
@@ -174,7 +186,7 @@ export async function POST(req: Request) {
     system: `You are an AI image editing assistant with actual image editing capabilities. You help users edit and enhance their images through conversation and tool usage.
 
 CURRENT IMAGE CONTEXT:
-${activeImageUrl ? `- Current image URL: ${activeImageUrl}` : '- No image currently loaded'}
+${sanitizedImageUrlForPrompt ? `- Current image: ${sanitizedImageUrlForPrompt}` : '- No image currently loaded'}
 ${imageData ? `- Image dimensions: ${imageData.width}x${imageData.height}` : ''}
 
 IMPORTANT CAPABILITIES:
@@ -197,7 +209,7 @@ FORMATTING INSTRUCTIONS:
 
 INTERACTION GUIDELINES:
 - When users ask to edit their image, use the editImage tool with the current image URL and dimensions
-- ALWAYS use the current image URL (${activeImageUrl}) when calling editImage tool
+- ALWAYS use the current image when calling the editImage tool (you do **not** need to include the full data URL)
 - Be creative but practical in your editing suggestions
 - Ask clarifying questions if the user's request is vague
 - Use the analyzeImage tool when you need to understand the image better
