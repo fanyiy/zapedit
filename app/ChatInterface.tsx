@@ -25,6 +25,7 @@ export function ChatInterface({
   onImageGenerated 
 }: ChatInterfaceProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const processedToolCalls = React.useRef(new Set<string>());
 
   const {
@@ -46,6 +47,22 @@ export function ChatInterface({
     },
   });
 
+  const resizeTextarea = React.useCallback(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+    
+    textarea.style.height = 'auto';
+    const newHeight = Math.min(textarea.scrollHeight, 128); // 128px = max-h-32
+    textarea.style.height = newHeight + 'px';
+    
+    // Enable scrolling when content exceeds max height
+    if (textarea.scrollHeight > 128) {
+      textarea.style.overflowY = 'auto';
+    } else {
+      textarea.style.overflowY = 'hidden';
+    }
+  }, []);
+
   const scrollToBottom = React.useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
@@ -62,6 +79,11 @@ export function ChatInterface({
       onSuggestionUsed?.();
     }
   }, [selectedSuggestion, setInput, onSuggestionUsed]);
+
+  // Resize textarea when input changes (including programmatic changes)
+  React.useEffect(() => {
+    resizeTextarea();
+  }, [input, resizeTextarea]);
 
   // Handle tool calls for image editing
   React.useEffect(() => {
@@ -320,25 +342,14 @@ export function ChatInterface({
         <form onSubmit={handleSubmit} className="relative bg-input border border-border rounded-xl shadow-sm">
           <Fieldset className="flex-1">
             <textarea
+              ref={textareaRef}
               value={input}
               onChange={handleInputChange}
               placeholder="Ask me anything..."
               className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[3rem] max-h-32 overflow-y-auto"
               disabled={isLoading}
               rows={1}
-              onInput={(e) => {
-                const target = e.target as HTMLTextAreaElement;
-                target.style.height = 'auto';
-                const newHeight = Math.min(target.scrollHeight, 128); // 128px = max-h-32
-                target.style.height = newHeight + 'px';
-                
-                // Enable scrolling when content exceeds max height
-                if (target.scrollHeight > 128) {
-                  target.style.overflowY = 'auto';
-                } else {
-                  target.style.overflowY = 'hidden';
-                }
-              }}
+              onInput={resizeTextarea}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
                   e.preventDefault();
