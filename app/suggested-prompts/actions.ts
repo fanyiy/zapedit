@@ -27,6 +27,7 @@ async function convertImageToBase64(
       signal: controller.signal,
       headers: {
         "User-Agent": "Mozilla/5.0 (compatible; ZapEdit/1.0)",
+        "Accept": "image/*",
       },
     });
 

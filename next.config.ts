@@ -27,6 +27,22 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "plus.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "modelscope.cn",
+      },
+      {
+        protocol: "https",
+        hostname: "modelscope-open.oss-cn-hangzhou.aliyuncs.com",
+      },
+      {
+        protocol: "https",
+        hostname: "resources.modelscope.cn",
+      },
+      {
+        protocol: "https",
+        hostname: "i.ibb.co",
+      },
     ],
   },
   serverExternalPackages: [],
