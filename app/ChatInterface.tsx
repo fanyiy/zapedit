@@ -132,13 +132,7 @@ export function ChatInterface({
 
   return (
     <div className="w-full h-full bg-card border-l border-border flex flex-col">
-      {/* Header */}
-      <div className="flex items-center justify-between p-4 border-b border-border">
-        <div className="flex items-center gap-3">
-          <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-          <h2 className="text-foreground font-medium">AI Agent</h2>
-        </div>
-      </div>
+
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
@@ -150,23 +144,23 @@ export function ChatInterface({
             </div>
             <p className="mb-4 leading-relaxed">I can see your current image and I&apos;m ready to edit it! Tell me what changes you&apos;d like to make.</p>
             <div className="rounded-xl bg-muted/50 border border-border p-3">
-              <p className="text-xs font-medium text-foreground mb-2">I can help with:</p>
+              <p className="text-xs font-medium text-foreground mb-2">What would you like to do?</p>
               <ul className="space-y-1 text-xs">
                 <li className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-primary rounded-full"></div>
-                  Editing images with AI
+                  Remove or add objects
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-primary rounded-full"></div>
-                  Generating creative ideas
+                  Change backgrounds & scenery
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-primary rounded-full"></div>
-                  Analyzing image content
+                  Apply artistic styles & effects
                 </li>
                 <li className="flex items-center gap-2">
                   <div className="w-1 h-1 bg-primary rounded-full"></div>
-                  Guiding your workflow
+                  Enhance colors & lighting
                 </li>
               </ul>
             </div>

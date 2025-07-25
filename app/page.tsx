@@ -485,7 +485,6 @@ export default function Home() {
                       {images.length > 1 && (
                         <div className="mt-3 text-center">
                           <p className="text-xs text-muted-foreground">
-                            <span className="md:inline hidden">Use ← → arrow keys to navigate versions</span>
                             <span className="md:hidden">Swipe left/right to navigate versions</span>
                           </p>
                         </div>
