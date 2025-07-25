@@ -339,7 +339,7 @@ export function ChatInterface({
               ref={textareaRef}
               value={input}
               onChange={handleInputChange}
-              placeholder="Ask me anything..."
+              placeholder="Describe what you'd like to edit..."
               className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[3rem] max-h-32 overflow-y-auto"
               disabled={isLoading}
               rows={1}
