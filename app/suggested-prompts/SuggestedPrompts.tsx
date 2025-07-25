@@ -57,7 +57,7 @@ export function SuggestedPrompts({
           key={i}
           type="button"
           onClick={() => onSelect(suggestion)}
-          className="inline-flex items-center px-4 md:px-3 py-3 md:py-2 rounded-full text-sm md:text-xs font-medium bg-muted/80 text-muted-foreground hover:bg-muted hover:text-white transition-all duration-200 border border-border/50 cursor-pointer min-h-[44px] md:min-h-auto"
+          className="inline-flex items-center justify-start text-left px-4 md:px-3 py-3 md:py-2 rounded-full text-sm md:text-xs font-medium bg-muted/80 text-muted-foreground hover:bg-muted hover:text-white transition-all duration-200 border border-border/50 cursor-pointer min-h-[44px] md:min-h-auto"
         >
           {suggestion}
         </button>

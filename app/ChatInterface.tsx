@@ -90,7 +90,7 @@ export function ChatInterface({
 
   if (!activeImageUrl) {
     return (
-      <div className="w-80 bg-card border-l border-border flex flex-col items-center justify-center p-6">
+      <div className="w-full bg-card border-l border-border flex flex-col items-center justify-center p-6">
         <div className="text-center">
           <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted border border-border">
             <svg className="h-8 w-8 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -109,15 +109,12 @@ export function ChatInterface({
   }
 
   return (
-    <div className="w-80 bg-card border-l border-border flex flex-col">
+    <div className="w-full h-full bg-card border-l border-border flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-border">
         <div className="flex items-center gap-3">
           <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
           <h2 className="text-foreground font-medium">AI Agent</h2>
-        </div>
-        <div className="text-xs text-muted-foreground">
-          {imageData.width}×{imageData.height}
         </div>
       </div>
 
@@ -319,20 +316,28 @@ export function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="p-4">
+      <div className="p-4 flex-shrink-0">
         <form onSubmit={handleSubmit} className="relative bg-input border border-border rounded-xl shadow-sm">
           <Fieldset className="flex-1">
             <textarea
               value={input}
               onChange={handleInputChange}
               placeholder="Ask me anything..."
-              className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[2.5rem] max-h-24"
+              className="w-full bg-transparent text-foreground placeholder-muted-foreground focus:outline-none text-xs px-3 py-3 pr-12 leading-normal resize-none min-h-[2.5rem] max-h-32 overflow-y-auto"
               disabled={isLoading}
               rows={1}
               onInput={(e) => {
                 const target = e.target as HTMLTextAreaElement;
                 target.style.height = 'auto';
-                target.style.height = Math.min(target.scrollHeight, 96) + 'px';
+                const newHeight = Math.min(target.scrollHeight, 128); // 128px = max-h-32
+                target.style.height = newHeight + 'px';
+                
+                // Enable scrolling when content exceeds max height
+                if (target.scrollHeight > 128) {
+                  target.style.overflowY = 'auto';
+                } else {
+                  target.style.overflowY = 'hidden';
+                }
               }}
               onKeyDown={(e) => {
                 if (e.key === 'Enter' && !e.shiftKey) {
