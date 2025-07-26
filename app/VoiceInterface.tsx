@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { AudioVisualizer } from './AudioVisualizer';
-import { Mic, MicOff, Volume2, VolumeX, MessageCircle, Loader2, CheckCircle, AlertCircle, Edit3 } from 'lucide-react';
+import { Mic, MicOff, Volume2, VolumeX } from 'lucide-react';
 import { VoiceModeToggle } from './VoiceModeToggle';
 import clsx from 'clsx';
 
@@ -37,95 +37,6 @@ const AudioPlayback: React.FC<AudioStreamProps & { muted?: boolean }> = ({ strea
   }, [muted]);
 
   return <audio ref={audioRef} autoPlay className="hidden" />;
-};
-
-const StatusIndicator: React.FC<{
-  status: 'idle' | 'listening' | 'processing' | 'speaking' | 'editing' | 'edit_complete' | 'error';
-  message: string;
-}> = ({ status, message }) => {
-  const getStatusConfig = () => {
-    switch (status) {
-      case 'listening':
-        return {
-          icon: <Mic className="w-4 h-4" />,
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
-          borderColor: 'border-blue-200',
-          pulse: true
-        };
-      case 'processing':
-        return {
-          icon: <Loader2 className="w-4 h-4 animate-spin" />,
-          color: 'text-yellow-600',
-          bgColor: 'bg-yellow-50',
-          borderColor: 'border-yellow-200',
-          pulse: false
-        };
-      case 'speaking':
-        return {
-          icon: <MessageCircle className="w-4 h-4" />,
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
-          pulse: true
-        };
-      case 'editing':
-        return {
-          icon: <Edit3 className="w-4 h-4" />,
-          color: 'text-purple-600',
-          bgColor: 'bg-purple-50',
-          borderColor: 'border-purple-200',
-          pulse: true
-        };
-      case 'edit_complete':
-        return {
-          icon: <CheckCircle className="w-4 h-4" />,
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
-          borderColor: 'border-green-200',
-          pulse: false
-        };
-      case 'error':
-        return {
-          icon: <AlertCircle className="w-4 h-4" />,
-          color: 'text-red-600',
-          bgColor: 'bg-red-50',
-          borderColor: 'border-red-200',
-          pulse: false
-        };
-      default:
-        return {
-          icon: <Mic className="w-4 h-4" />,
-          color: 'text-gray-600',
-          bgColor: 'bg-gray-50',
-          borderColor: 'border-gray-200',
-          pulse: false
-        };
-    }
-  };
-
-  const config = getStatusConfig();
-
-  return (
-    <div className={clsx(
-      "flex items-center gap-3 p-3 rounded-xl border transition-all duration-300",
-      config.bgColor,
-      config.borderColor,
-      config.pulse && "animate-pulse"
-    )}>
-      <div className={clsx("flex-shrink-0", config.color)}>
-        {config.icon}
-      </div>
-      <div className="flex-1">
-        <div className={clsx("text-sm font-medium", config.color)}>
-          {status.replace('_', ' ').toUpperCase()}
-        </div>
-        <div className="text-xs text-gray-600 mt-0.5">
-          {message}
-        </div>
-      </div>
-    </div>
-  );
 };
 
 export function VoiceInterface({ 
@@ -251,7 +162,7 @@ export function VoiceInterface({
 
     setConnectionStatus('connecting');
     setCurrentStatus('idle');
-    setStatusMessage('Connecting to voice assistant...');
+    setStatusMessage('Connecting...');
     onConnectionStatusChange?.('connecting');
 
     try {
@@ -309,7 +220,7 @@ The user has an image loaded that you can edit using your tools.`
         configureSession();
         setConnectionStatus('connected');
         setCurrentStatus('listening');
-        setStatusMessage('Ready to listen - speak your request');
+        setStatusMessage('Ready to listen');
         onConnectionStatusChange?.('connected');
       });
 
@@ -323,19 +234,19 @@ The user has an image loaded that you can edit using your tools.`
         switch (msg.type) {
           case 'conversation.item.input_audio_transcription.completed':
             setCurrentStatus('processing');
-            setStatusMessage('Processing your request...');
+            setStatusMessage('Processing...');
             break;
             
           case 'response.audio.delta':
             setCurrentStatus('speaking');
-            setStatusMessage('AI is responding...');
+            setStatusMessage('Responding...');
             break;
             
           case 'response.function_call_arguments.delta':
             // Only update status if this is a new function call
             if (msg.name === 'editImage' && currentFunctionCall.current !== msg.call_id) {
               setCurrentStatus('editing');
-              setStatusMessage('Editing your image...');
+              setStatusMessage('Editing...');
             }
             break;
             
@@ -359,7 +270,7 @@ The user has an image loaded that you can edit using your tools.`
               
               if (msg.name === 'editImage') {
                 setCurrentStatus('editing');
-                setStatusMessage('Processing image edit...');
+                setStatusMessage('Editing...');
               }
               
               try {
@@ -371,18 +282,17 @@ The user has an image loaded that you can edit using your tools.`
                 // Update status based on result
                 if (result.success && msg.name === 'editImage') {
                   setCurrentStatus('edit_complete');
-                  setStatusMessage('Image edit completed successfully!');
+                  setStatusMessage('Complete');
                   setTimeout(() => {
                     setCurrentStatus('listening');
-                    setStatusMessage('Ready for your next request');
+                    setStatusMessage('Listening...');
                   }, 2000);
                 } else if (!result.success) {
                   setCurrentStatus('error');
-                  const errorMsg = 'error' in result ? result.error : 'Unknown error';
-                  setStatusMessage(`Error: ${errorMsg || 'Unknown error'}`);
+                  setStatusMessage('Error');
                   setTimeout(() => {
                     setCurrentStatus('listening');
-                    setStatusMessage('Ready to try again');
+                    setStatusMessage('Listening...');
                   }, 3000);
                 }
 
@@ -400,10 +310,10 @@ The user has an image loaded that you can edit using your tools.`
               } catch (error) {
                 console.error('Function execution error:', error);
                 setCurrentStatus('error');
-                setStatusMessage(`Function error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                setStatusMessage('Error');
                 setTimeout(() => {
                   setCurrentStatus('listening');
-                  setStatusMessage('Ready to try again');
+                  setStatusMessage('Listening...');
                 }, 3000);
               } finally {
                 currentFunctionCall.current = null;
@@ -415,7 +325,7 @@ The user has an image loaded that you can edit using your tools.`
             // AI finished speaking, back to listening
             if (currentStatus === 'speaking') {
               setCurrentStatus('listening');
-              setStatusMessage('Listening for your next request...');
+              setStatusMessage('Listening...');
             }
             break;
             
@@ -426,7 +336,7 @@ The user has an image loaded that you can edit using your tools.`
             
           case 'input_audio_buffer.speech_stopped':
             setCurrentStatus('processing');
-            setStatusMessage('Processing your speech...');
+            setStatusMessage('Processing...');
             break;
         }
       });
@@ -463,10 +373,10 @@ The user has an image loaded that you can edit using your tools.`
       console.error('Failed to initialize voice connection:', error);
       setConnectionStatus('error');
       setCurrentStatus('error');
-      setStatusMessage(`Connection failed: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setStatusMessage('Connection failed');
       onConnectionStatusChange?.('error');
     }
-  }, [connectionStatus, tools, functionDefinitions, onConnectionStatusChange]);
+  }, [connectionStatus, currentStatus, tools, functionDefinitions, onConnectionStatusChange]);
 
   // Disconnect voice connection
   const disconnectVoice = React.useCallback(() => {
@@ -493,7 +403,7 @@ The user has an image loaded that you can edit using your tools.`
     setIsListening(false);
     setConnectionStatus('disconnected');
     setCurrentStatus('idle');
-    setStatusMessage('Disconnected from voice assistant');
+    setStatusMessage('Disconnected');
     
     // Clear processed function calls for fresh state
     processedToolCalls.current.clear();
@@ -511,7 +421,7 @@ The user has an image loaded that you can edit using your tools.`
       console.log('VoiceInterface unmounting, cleaning up...');
       disconnectVoice();
     };
-  }, []);
+  }, [initializeVoiceConnection, disconnectVoice]);
 
   // Cleanup when switching away from voice mode
   React.useEffect(() => {
@@ -523,52 +433,24 @@ The user has an image loaded that you can edit using your tools.`
     };
   }, [outputStream]);
 
-  const getStatusColor = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'text-green-600';
-      case 'connecting': return 'text-yellow-600';
-      case 'error': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
-  };
-
-  const getStatusText = () => {
-    switch (connectionStatus) {
-      case 'connected': return 'Connected - Listening';
-      case 'connecting': return 'Connecting...';
-      case 'error': return 'Connection Error';
-      default: return 'Disconnected';
-    }
-  };
-
   if (!activeImageUrl) {
     return (
       <div className="w-full bg-card border-l border-border flex flex-col">
-        {/* Mode Toggle Header */}
-        <div className="p-4 border-b border-border/50">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-foreground">Voice Mode</h3>
-            {onToggleMode && (
-              <VoiceModeToggle 
-                isVoiceMode={true} 
-                onToggle={onToggleMode}
-                disabled={false}
-              />
-            )}
-          </div>
+        <div className="p-6 border-b border-border/50 flex items-center justify-start">
+          {onToggleMode && (
+            <VoiceModeToggle 
+              isVoiceMode={true} 
+              onToggle={onToggleMode}
+              disabled={false}
+            />
+          )}
         </div>
         
-        {/* Content */}
-        <div className="flex-1 flex flex-col items-center justify-center p-6">
-          <div className="text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-2xl bg-muted border border-border">
-              <Mic className="h-8 w-8 text-muted-foreground" />
-            </div>
-            <h3 className="text-lg font-medium text-foreground mb-3">
-              Voice Mode
-            </h3>
-            <p className="text-muted-foreground text-sm leading-relaxed">
-              Upload an image to start voice editing with your AI assistant
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center space-y-3">
+            <Mic className="h-8 w-8 text-muted-foreground mx-auto" />
+            <p className="text-sm text-muted-foreground">
+              Upload an image to start
             </p>
           </div>
         </div>
@@ -578,130 +460,68 @@ The user has an image loaded that you can edit using your tools.`
 
   return (
     <div className="w-full h-screen bg-card border-l border-border flex flex-col">
-      {/* Header */}
-      <div className="p-4 border-b border-border/50">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-medium text-foreground">Voice Mode</h3>
-          <div className="flex items-center gap-3">
-            <div className={clsx("text-xs font-medium", getStatusColor())}>
-              {getStatusText()}
-            </div>
-            {onToggleMode && (
-              <VoiceModeToggle 
-                isVoiceMode={true} 
-                onToggle={onToggleMode}
-                disabled={connectionStatus === 'connecting'}
-              />
-            )}
-          </div>
+      {/* Minimal Header */}
+      <div className="p-6 border-b border-border/50">
+        <div className="flex items-center justify-start mb-4">
+          {onToggleMode && (
+            <VoiceModeToggle 
+              isVoiceMode={true} 
+              onToggle={onToggleMode}
+              disabled={connectionStatus === 'connecting'}
+            />
+          )}
         </div>
         
-        {/* Connection Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           <button
             onClick={connectionStatus === 'connected' ? disconnectVoice : initializeVoiceConnection}
             disabled={connectionStatus === 'connecting'}
             className={clsx(
-              "flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all",
+              "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm transition-colors",
               connectionStatus === 'connected' 
-                ? "bg-red-50 text-red-700 hover:bg-red-100 border border-red-200" 
-                : "bg-green-50 text-green-700 hover:bg-green-100 border border-green-200",
-              connectionStatus === 'connecting' && "opacity-50 cursor-not-allowed"
+                ? "text-red-600 hover:bg-red-50" 
+                : "text-green-600 hover:bg-green-50",
+              connectionStatus === 'connecting' && "opacity-50"
             )}
           >
-            {connectionStatus === 'connected' ? (
-              <>
-                <MicOff className="w-4 h-4" />
-                Disconnect
-              </>
-            ) : (
-              <>
-                <Mic className="w-4 h-4" />
-                {connectionStatus === 'connecting' ? 'Connecting...' : 'Connect'}
-              </>
-            )}
+            {connectionStatus === 'connected' ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {connectionStatus === 'connecting' ? 'Connecting' : connectionStatus === 'connected' ? 'Disconnect' : 'Connect'}
           </button>
 
-          <button
-            onClick={() => setIsMuted(!isMuted)}
-            disabled={connectionStatus !== 'connected'}
-            className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all bg-muted hover:bg-muted/80 disabled:opacity-50"
-          >
-            {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
-            {isMuted ? 'Unmute' : 'Mute'}
-          </button>
+          {connectionStatus === 'connected' && (
+            <button
+              onClick={() => setIsMuted(!isMuted)}
+              className="p-1.5 text-muted-foreground hover:text-foreground transition-colors"
+            >
+              {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Status Indicator */}
-      <div className="p-4">
-        <StatusIndicator status={currentStatus} message={statusMessage} />
-      </div>
+      {/* Status */}
+      {statusMessage && (
+        <div className="px-6 py-3 border-b border-border/50">
+          <div className="text-sm text-muted-foreground">{statusMessage}</div>
+        </div>
+      )}
 
       {/* Audio Visualizer */}
-      <div className="p-4">
-        <div className="text-xs text-muted-foreground mb-2">Audio Input</div>
+      <div className="p-6">
         <AudioVisualizer 
           stream={audioStream || undefined} 
           isActive={isListening && connectionStatus === 'connected'} 
         />
       </div>
 
-      {/* Instructions */}
-      <div className="flex-1 p-4 space-y-4">
-        <div className="bg-muted/50 border border-border rounded-xl p-4">
-          <h4 className="text-sm font-medium text-foreground mb-3">What you can say:</h4>
-          <div className="space-y-2 text-xs text-muted-foreground">
-            {Object.entries(functionDefinitions)
-              .filter(([, { examplePrompt }]) => examplePrompt)
-              .map(([name, { examplePrompt, description }]) => (
-                <div key={name} className="border-l-2 border-primary/20 pl-3">
-                  <div className="font-medium text-foreground mb-1">&quot;{examplePrompt}&quot;</div>
-                  <div className="text-xs">{description}</div>
-                </div>
-              ))
-            }
+      {/* Simple Instructions */}
+      {connectionStatus === 'connected' && (
+        <div className="px-6 pb-6">
+          <div className="text-sm text-muted-foreground">
+            Say things like &quot;add a sunset background&quot; or &quot;make it more colorful&quot;
           </div>
         </div>
-
-        {connectionStatus === 'connected' && currentStatus === 'listening' && (
-          <div className="text-center text-sm text-blue-600 font-medium animate-pulse">
-🎤 Speak now - I&apos;m listening for your image editing request
-          </div>
-        )}
-        
-        {currentStatus === 'editing' && (
-          <div className="text-center text-sm text-purple-600 font-medium">
-            ✨ Working on your image edit - this may take a moment...
-          </div>
-        )}
-        
-        {currentStatus === 'edit_complete' && (
-          <div className="text-center text-sm text-green-600 font-medium">
-            ✅ Edit complete! Your new image should appear on the left
-          </div>
-        )}
-
-        {connectionStatus === 'error' && (
-          <div className="bg-red-50 border border-red-200 rounded-xl p-4">
-            <div className="text-sm text-red-700 font-medium mb-2">Connection Error</div>
-            <div className="text-xs text-red-600 mb-3">
-              Failed to connect to voice assistant. This could be due to:
-            </div>
-            <ul className="text-xs text-red-600 space-y-1 mb-3">
-              <li>• Microphone permission not granted</li>
-              <li>• Network connectivity issues</li>
-              <li>• OpenAI API configuration problems</li>
-            </ul>
-            <button
-              onClick={initializeVoiceConnection}
-              className="text-xs bg-red-100 text-red-700 px-3 py-1 rounded-lg hover:bg-red-200 transition-colors"
-            >
-              Try Again
-            </button>
-          </div>
-        )}
-      </div>
+      )}
 
       {/* Audio Output */}
       {outputStream && (
