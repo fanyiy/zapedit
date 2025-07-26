@@ -93,7 +93,7 @@ export function SampleImages({
             Or try one of these examples
           </p>
         </div>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-3 gap-6 p-2 pb-6">
           {[1, 2, 3].map((index) => (
             <div
               key={index}
@@ -131,11 +131,11 @@ export function SampleImages({
         </p>
       </div>
       <div className="flex-1 overflow-y-auto">
-        <div className="grid grid-cols-3 gap-4 pb-4">
+        <div className="grid grid-cols-3 gap-6 p-2 pb-6">
           {sampleImages.map((sample, index) => (
             <button
               key={sample.id}
-              className="group relative overflow-hidden rounded-xl hover:ring-2 hover:ring-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+              className="group relative overflow-hidden rounded-xl hover:ring-2 hover:ring-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer transform-gpu"
               onClick={() => {
                 // Check authentication before selecting image
                 if (onAuthRequired && !onAuthRequired()) {
