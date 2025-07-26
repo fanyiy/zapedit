@@ -64,13 +64,19 @@ export function ChatInterface({
   }, []);
 
   const scrollToBottom = React.useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+      // Also ensure immediate scroll for reliability
+      setTimeout(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+      }, 100);
+    }
   }, []);
 
   // Auto-scroll when messages change or when loading state changes
   React.useEffect(() => {
     scrollToBottom();
-  }, [messages.length, isLoading, scrollToBottom]);
+  }, [messages, isLoading, scrollToBottom]);
 
   // Handle selected suggestions
   React.useEffect(() => {
@@ -87,6 +93,8 @@ export function ChatInterface({
 
   // Handle tool calls for image editing
   React.useEffect(() => {
+    let hasNewToolResult = false;
+    
     messages.forEach(message => {
       message.parts.forEach(part => {
         if (part.type === 'tool-invocation' && 
@@ -105,10 +113,16 @@ export function ChatInterface({
           processedToolCalls.current.add(toolCallId);
           const { imageUrl, prompt } = part.toolInvocation.result;
           onImageGenerated?.(imageUrl, prompt);
+          hasNewToolResult = true;
         }
       });
     });
-  }, [messages, onImageGenerated]);
+    
+    // Auto-scroll after processing tool results
+    if (hasNewToolResult) {
+      setTimeout(scrollToBottom, 200);
+    }
+  }, [messages, onImageGenerated, scrollToBottom]);
 
   if (!activeImageUrl) {
     return (
@@ -131,11 +145,11 @@ export function ChatInterface({
   }
 
   return (
-    <div className="w-full h-full bg-card border-l border-border flex flex-col">
+    <div className="w-full h-screen bg-card border-l border-border flex flex-col">
 
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar min-h-0">
         {messages.length === 0 && (
           <div className="text-muted-foreground text-sm">
             <div className="flex items-center gap-2 mb-3">
@@ -332,7 +346,7 @@ export function ChatInterface({
       </div>
 
       {/* Input */}
-      <div className="p-4 flex-shrink-0">
+      <div className="p-4 flex-shrink-0 border-t border-border/50">
         <form onSubmit={handleSubmit} className="relative bg-input border border-border rounded-xl shadow-sm">
           <Fieldset className="flex-1">
             <textarea

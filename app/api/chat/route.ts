@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
-import { generateImageV2 } from '../../actions';
+import { generateImage, generateImageV2 } from '../../actions';
 
 export const maxDuration = 30;
 
@@ -49,7 +49,7 @@ export async function POST(req: Request) {
             };
           }
                       try {
-              const result = await generateImageV2({
+              const result = await generateImage({
                 imageUrl: finalImageUrl,
                 prompt,
                 width: finalWidth,

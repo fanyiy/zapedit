@@ -2,6 +2,11 @@ import Image from "next/image";
 
 const sampleImages = [
   {
+    url: "https://resources.modelscope.cn/aigc/image_edit.png",
+    width: 892,
+    height: 892,
+  },
+  {
     url: "https://i.ibb.co/LdNQT9r4/image.png",
     width: 1012,
     height: 674,
