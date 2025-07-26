@@ -104,7 +104,7 @@ export function SignupModal({ onClose }: SignupModalProps) {
           <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
             <span>Open source on</span>
             <a 
-              href="https://github.com/evanyang1/zapedit" 
+              href="https://github.com/fanyiy/zapedit" 
               target="_blank" 
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 hover:text-foreground transition-colors"

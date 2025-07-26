@@ -122,7 +122,7 @@ export function SampleImages({
 
   return (
     <div className="h-full flex flex-col">
-      <div className="mb-4">
+      <div className="mb-4 flex-shrink-0">
         <h3 className="text-xl font-semibold text-foreground mb-2">
           Sample images
         </h3>
@@ -130,38 +130,40 @@ export function SampleImages({
           Or try one of these examples
         </p>
       </div>
-      <div className="grid grid-cols-3 gap-4">
-        {sampleImages.map((sample, index) => (
-          <button
-            key={sample.id}
-            className="group relative overflow-hidden rounded-xl hover:ring-2 hover:ring-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer"
-            onClick={() => {
-              // Check authentication before selecting image
-              if (onAuthRequired && !onAuthRequired()) {
-                return; // Authentication required, don't proceed
-              }
-              
-              onSelect({
-                url: sample.url,
-                width: sample.width,
-                height: sample.height,
-              });
-            }}
-          >
-            <Image
-              src={sample.url}
-              width={sample.width}
-              height={sample.height}
-              alt={`Sample image ${index + 1}`}
-              className="aspect-[4/3] w-full object-cover"
-            />
-            <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-              <p className="text-white text-sm font-medium">
-                Use this image
-              </p>
-            </div>
-          </button>
-        ))}
+      <div className="flex-1 overflow-y-auto">
+        <div className="grid grid-cols-3 gap-4 pb-4">
+          {sampleImages.map((sample, index) => (
+            <button
+              key={sample.id}
+              className="group relative overflow-hidden rounded-xl hover:ring-2 hover:ring-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+              onClick={() => {
+                // Check authentication before selecting image
+                if (onAuthRequired && !onAuthRequired()) {
+                  return; // Authentication required, don't proceed
+                }
+                
+                onSelect({
+                  url: sample.url,
+                  width: sample.width,
+                  height: sample.height,
+                });
+              }}
+            >
+              <Image
+                src={sample.url}
+                width={sample.width}
+                height={sample.height}
+                alt={`Sample image ${index + 1}`}
+                className="aspect-[4/3] w-full object-cover"
+              />
+              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                <p className="text-white text-sm font-medium">
+                  Use this image
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
     </div>
   );
