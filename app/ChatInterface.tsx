@@ -27,6 +27,7 @@ export function ChatInterface({
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const processedToolCalls = React.useRef(new Set<string>());
+  const [provider, setProvider] = React.useState<'fal' | 'modelscope'>('fal');
 
   const {
     messages,
@@ -40,6 +41,7 @@ export function ChatInterface({
     body: {
       activeImageUrl,
       imageData,
+      provider,
     },
     onFinish: () => {
       // Auto-scroll after message finishes
@@ -382,8 +384,24 @@ export function ChatInterface({
           </button>
         </form>
         
-        {/* Quick Actions */}
-
+        {/* Provider Dropdown */}
+        <div className="mt-3 flex items-center justify-start">
+          <div className="relative">
+            <select
+              value={provider}
+              onChange={(e) => setProvider(e.target.value as 'fal' | 'modelscope')}
+              className="appearance-none bg-background border border-input rounded-xl pl-2 pr-6 py-1 text-xs text-foreground shadow-xs transition-all duration-200 focus:outline-none hover:bg-muted/50 cursor-pointer"
+            >
+              <option value="fal">Fal.ai</option>
+              <option value="modelscope">ModelScope</option>
+            </select>
+            <div className="absolute inset-y-0 right-0 flex items-center pr-1.5 pointer-events-none">
+              <svg className="w-3 h-3 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+              </svg>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );

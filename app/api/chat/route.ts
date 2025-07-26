@@ -1,12 +1,12 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
-import { generateImage } from '../../actions';
+import { generateImage, generateImageV2 } from '../../actions';
 
 export const maxDuration = 30;
 
 export async function POST(req: Request) {
-  const { messages, activeImageUrl, imageData } = await req.json();
+  const { messages, activeImageUrl, imageData, provider = 'fal' } = await req.json();
 
   // Avoid sending extremely long base64 data URLs to the language model – this can blow up
   // the token count and cause the request to fail. If the current image is a data-URL we
@@ -49,7 +49,8 @@ export async function POST(req: Request) {
             };
           }
                       try {
-              const result = await generateImage({
+              const generateImageFunction = provider === 'modelscope' ? generateImageV2 : generateImage;
+              const result = await generateImageFunction({
                 imageUrl: finalImageUrl,
                 prompt,
                 width: finalWidth,
