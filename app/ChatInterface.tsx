@@ -163,8 +163,7 @@ export function ChatInterface({
       <div className="w-full bg-card border-l border-border flex flex-col">
         {/* Mode Toggle Header */}
         <div className="p-4 border-b border-border/50">
-          <div className="flex items-center justify-between">
-            <h3 className="text-lg font-medium text-foreground">AI Agent</h3>
+          <div className="flex items-center justify-start">
             <VoiceModeToggle 
               isVoiceMode={isVoiceMode} 
               onToggle={setIsVoiceMode}
@@ -181,9 +180,6 @@ export function ChatInterface({
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-3">
-              AI Agent
-            </h3>
             <p className="text-muted-foreground text-sm leading-relaxed">
               Upload an image to start working with your AI editing agent
             </p>
@@ -216,8 +212,7 @@ export function ChatInterface({
     <div className="w-full h-screen bg-card border-l border-border flex flex-col">
       {/* Mode Toggle Header */}
       <div className="p-4 border-b border-border/50">
-        <div className="flex items-center justify-between">
-          <h3 className="text-lg font-medium text-foreground">AI Agent</h3>
+        <div className="flex items-center justify-start">
           <VoiceModeToggle 
             isVoiceMode={isVoiceMode} 
             onToggle={setIsVoiceMode}

@@ -421,7 +421,8 @@ The user has an image loaded that you can edit using your tools.`
       console.log('VoiceInterface unmounting, cleaning up...');
       disconnectVoice();
     };
-  }, [initializeVoiceConnection, disconnectVoice]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run on mount/unmount
 
   // Cleanup when switching away from voice mode
   React.useEffect(() => {
