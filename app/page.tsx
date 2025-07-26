@@ -3,6 +3,7 @@
 import Image, { getImageProps } from "next/image";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ImageUploader } from "./ImageUploader";
+import UserButton from "./components/auth/UserButton";
 
 import Spinner from "./Spinner";
 import ScanningEffect from "./ScanningEffect";
@@ -12,6 +13,7 @@ import { SampleImages } from "./SampleImages";
 import { DownloadIcon } from "./components/DownloadIcon";
 import { toast } from "sonner";
 import { SuggestedPrompts } from "./suggested-prompts/SuggestedPrompts";
+import { EditingSessions } from "./components/EditingSessions";
 
 import { ChatInterface } from "./ChatInterface";
 import {
@@ -28,6 +30,7 @@ type Image = {
 
 export default function Home() {
   const [images, setImages] = useState<Image[]>([]);
+  const [currentImageId, setCurrentImageId] = useState<string | null>(null);
   const [imageData, setImageData] = useState<{
     width: number;
     height: number;
@@ -41,11 +44,11 @@ export default function Home() {
 
   const activeImage = images.find((i) => i.url === activeImageUrl);
 
-
   useEffect(() => {
     function handleNewSession() {
       setImages([]);
       setActiveImageUrl(null);
+      setCurrentImageId(null);
     }
     window.addEventListener("new-image-session", handleNewSession);
     return () => {
@@ -213,8 +216,6 @@ export default function Home() {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [activeImage, images, navigateToPreviousVersion, navigateToNextVersion, handleDownload]);
 
-
-
   function handleDeleteVersion(imageUrl: string) {
     const updatedImages = images.filter(img => img.url !== imageUrl);
     setImages(updatedImages);
@@ -229,58 +230,148 @@ export default function Home() {
     }
   }
 
-
-
-
+  // Handle project restoration from editing sessions
+  const handleProjectSelect = async (project: any) => {
+    try {
+      setImageLoading(true);
+      
+      // Set the image data first
+      setImageData({ width: project.width, height: project.height });
+      setCurrentImageId(project.imageId);
+      
+          // Create images array from the project sessions
+    const completedSessions = project.sessions
+      .filter((session: any) => session.status === 'completed' && session.resultUrl)
+      .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+    
+    // Remove duplicates based on resultUrl
+    const uniqueSessions = completedSessions.filter((session: any, index: number, array: any[]) => 
+      array.findIndex(s => s.resultUrl === session.resultUrl) === index
+    );
+    
+    const projectImages = [
+      // Original image as version 0
+      {
+        url: project.originalUrl,
+        version: 0,
+      },
+      // Add all unique completed edits
+      ...uniqueSessions.map((session: any, index: number) => ({
+        url: session.resultUrl,
+        prompt: session.prompt,
+        version: index + 1,
+      }))
+    ];
+      
+      setImages(projectImages);
+      
+      // Set the latest edit as active (or original if no edits)
+      const latestImage = projectImages[projectImages.length - 1];
+      
+      // Preload the image
+      await preloadNextImage({
+        src: latestImage.url,
+        width: project.width,
+        height: project.height,
+      });
+      
+      setActiveImageUrl(latestImage.url);
+    } catch (error) {
+      console.error("Error restoring project:", error);
+      toast.error("Failed to restore project");
+    } finally {
+      setImageLoading(false);
+    }
+  };
 
   return (
     <>
       {!activeImage ? (
-        // Original landing page layout when no active image
-        <div className="min-h-screen">
-          <div className="flex-1 min-h-screen mx-auto max-w-4xl">
-            <div className="flex-col pt-16 pb-12 md:pt-24">
-              <div className="max-w-3xl mx-auto">
-                <div className="text-center mb-20">
-                  <h1 className="text-4xl font-bold text-white mb-8 md:text-5xl">
-                    Edit images with AI
-                  </h1>
-                  <p className="text-muted-foreground text-lg max-w-2xl mx-auto leading-relaxed">
-                    Upload any image and describe the changes you want. Simple and fast.
-                  </p>
+        // Bento grid layout when no active image - Full screen, no scroll
+        <div className="h-screen bg-background overflow-hidden">
+          <div className="h-full mx-auto max-w-7xl flex flex-col">
+            {/* Header */}
+            <div className="flex justify-end pt-4 pr-4 flex-shrink-0">
+              <UserButton />
+            </div>
+            
+            {/* Bento Grid Container - Takes remaining height */}
+            <div className="flex-1 p-4 min-h-0">
+              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+                
+                {/* Hero Section - Large card */}
+                <div className="md:col-span-8 lg:col-span-7 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700/50 flex items-center">
+                  <div className="text-center md:text-left w-full">
+                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
+                      Edit images
+                      <br />
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
+                        with AI
+                      </span>
+                    </h1>
+                    <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
+                      Upload any image and describe the changes you want. Simple, fast, and powerful AI editing.
+                    </p>
+                  </div>
                 </div>
 
-                <div className="mb-12">
-                  <ImageUploader
-                    onUpload={async ({ url, width, height }) => {
-                      setImageData({ width, height });
-                      setImages([{ url, version: 0 }]);
-                      setActiveImageUrl(url);
-                      // Preload the image for smooth display
-                      await preloadNextImage({
-                        src: url,
-                        width,
-                        height,
-                      });
-                    }}
-                  />
+                {/* Upload Section - Medium card */}
+                <div className="md:col-span-4 lg:col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                  <div className="h-full flex flex-col">
+                    <h2 className="text-lg font-semibold text-foreground mb-3 flex-shrink-0">
+                      Start Creating
+                    </h2>
+                    <div className="flex-1 min-h-0">
+                      <ImageUploader
+                        onUpload={async ({ id, url, width, height }) => {
+                          setImageData({ width, height });
+                          setCurrentImageId(id);
+                          setImages([{ url, version: 0 }]);
+                          setActiveImageUrl(url);
+                          // Preload the image for smooth display
+                          await preloadNextImage({
+                            src: url,
+                            width,
+                            height,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
 
-                <div className="mb-12">
-                  <SampleImages
-                    onSelect={async ({ url, width, height }) => {
-                      setImageData({ width, height });
-                      setImages([{ url, version: 0 }]);
-                      setActiveImageUrl(url);
-                      // Preload the image for smooth display
-                      await preloadNextImage({
-                        src: url,
-                        width,
-                        height,
-                      });
-                    }}
-                  />
+                {/* Sample Images - Wide card */}
+                <div className="md:col-span-7 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                  <div className="h-full flex flex-col">
+                    <h2 className="text-lg font-semibold text-foreground mb-3 flex-shrink-0">
+                      Try Sample Images
+                    </h2>
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      <SampleImages
+                        onSelect={async ({ url, width, height }) => {
+                          setImageData({ width, height });
+                          setCurrentImageId(null); // Sample images don't have IDs yet
+                          setImages([{ url, version: 0 }]);
+                          setActiveImageUrl(url);
+                          // Preload the image for smooth display
+                          await preloadNextImage({
+                            src: url,
+                            width,
+                            height,
+                          });
+                        }}
+                      />
+                    </div>
+                  </div>
                 </div>
+
+                {/* Recent Projects - Medium card */}
+                <div className="md:col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                  <div className="h-full overflow-y-auto">
+                    <EditingSessions onProjectSelect={handleProjectSelect} />
+                  </div>
+                </div>
+
               </div>
             </div>
           </div>
@@ -502,6 +593,7 @@ export default function Home() {
             <ChatInterface
               activeImageUrl={activeImageUrl}
               imageData={imageData}
+              currentImageId={currentImageId}
               selectedSuggestion={selectedSuggestion}
               onSuggestionUsed={() => setSelectedSuggestion(null)}
               onImageGenerated={async (imageUrl: string, prompt: string) => {

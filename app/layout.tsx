@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import PlausibleProvider from "next-plausible";
 import { Toaster } from "@/components/ui/sonner";
+import Providers from "./components/providers";
 
 const title = "ZapEdit – Edit images with one prompt";
 const description = "The easiest way to edit images in one prompt";
@@ -52,11 +53,12 @@ export default function RootLayout({
         <PlausibleProvider domain="zapedit.vercel.app" />
       </head>
       <body className="flex min-h-screen w-full flex-col antialiased">
-        <main className="flex flex-1 flex-col">
-          {children}
-        </main>
-
-        <Toaster />
+        <Providers>
+          <main className="flex flex-1 flex-col">
+            {children}
+          </main>
+          <Toaster />
+        </Providers>
       </body>
     </html>
   );

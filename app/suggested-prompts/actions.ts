@@ -56,6 +56,11 @@ async function convertImageToBase64(
       throw new Error("Image fetch timeout - please try again");
     }
 
+    // For 400/403 errors, likely R2 configuration issue
+    if (error instanceof Error && (error.message.includes("400") || error.message.includes("403"))) {
+      throw new Error("Image not publicly accessible - check R2 bucket configuration");
+    }
+
     // For other errors, provide more specific error messages
     if (error instanceof Error) {
       throw new Error(`Failed to fetch image: ${error.message}`);

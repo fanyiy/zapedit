@@ -1,43 +1,60 @@
+"use client";
+
 import clsx from "clsx";
 import { useRef, useState, useTransition } from "react";
 import Spinner from "./Spinner";
 
-export function ImageUploader({
-  onUpload,
-}: {
-  onUpload: ({
-    url,
-    width,
-    height,
-  }: {
+interface ImageUploaderProps {
+  onUpload: (data: {
+    id: string;
     url: string;
     width: number;
     height: number;
   }) => void;
-}) {
+}
+
+export function ImageUploader({ onUpload }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [pending, startTransition] = useTransition();
 
   async function handleUpload(file: File) {
     startTransition(async () => {
-      // Convert file to base64 data URL
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const dataUrl = e.target?.result as string;
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
         
-        // Create an image element to get dimensions
-        const img = new Image();
-        img.onload = () => {
-          onUpload({
-            url: dataUrl,
-            width: img.width,
-            height: img.height,
-          });
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        
+        if (!response.ok) {
+          throw new Error("Upload failed");
+        }
+        
+        const result = await response.json();
+        onUpload(result);
+      } catch (error) {
+        console.error("Upload error:", error);
+        // Fallback to data URL for local processing
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const dataUrl = e.target?.result as string;
+          
+          const img = new Image();
+          img.onload = () => {
+            onUpload({
+              id: "", // No ID for fallback
+              url: dataUrl,
+              width: img.width,
+              height: img.height,
+            });
+          };
+          img.src = dataUrl;
         };
-        img.src = dataUrl;
-      };
-      reader.readAsDataURL(file);
+        reader.readAsDataURL(file);
+      }
     });
   }
 

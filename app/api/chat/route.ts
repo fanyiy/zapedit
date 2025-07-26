@@ -1,12 +1,17 @@
-import { openai } from '@ai-sdk/openai';
-import { streamText, tool } from 'ai';
-import { z } from 'zod';
-import { generateImage, generateImageV2 } from '../../actions';
+import { openai } from "@ai-sdk/openai";
+import { streamText, tool } from "ai";
+import { z } from "zod";
+import { generateImage, generateImageV2 } from "../../actions";
 
-export const maxDuration = 30;
+export const maxDuration = 300;
 
 export async function POST(req: Request) {
-  const { messages, activeImageUrl, imageData, provider = 'fal' } = await req.json();
+  const {
+    messages,
+    activeImageUrl,
+    imageData,
+    provider = "fal",
+  } = await req.json();
 
   // Avoid sending extremely long base64 data URLs to the language model – this can blow up
   // the token count and cause the request to fail. If the current image is a data-URL we
@@ -17,19 +22,44 @@ export async function POST(req: Request) {
       : activeImageUrl;
 
   const result = streamText({
-    model: openai('gpt-4o'),
+    model: openai("gpt-4o"),
     maxSteps: 5,
     messages,
     tools: {
       editImage: tool({
-        description: 'Edit an image based on user instructions. Use this when the user wants to modify, enhance, or change aspects of the current image. This will actually generate a new edited version of the image.',
+        description:
+          "Edit an image based on user instructions. Use this when the user wants to modify, enhance, or change aspects of the current image. This will actually generate a new edited version of the image.",
         parameters: z.object({
-          prompt: z.string().describe('The editing instructions for the image - be specific and detailed'),
-          imageUrl: z.string().optional().describe('The URL of the image to edit (defaults to current image)'),
-          width: z.number().optional().describe('The width of the image (defaults to current image width)'),
-          height: z.number().optional().describe('The height of the image (defaults to current image height)'),
+          prompt: z
+            .string()
+            .describe(
+              "The editing instructions for the image - be specific and detailed",
+            ),
+          imageUrl: z
+            .string()
+            .optional()
+            .describe(
+              "The URL of the image to edit (defaults to current image)",
+            ),
+          width: z
+            .number()
+            .optional()
+            .describe(
+              "The width of the image (defaults to current image width)",
+            ),
+          height: z
+            .number()
+            .optional()
+            .describe(
+              "The height of the image (defaults to current image height)",
+            ),
         }),
-        execute: async ({ prompt, imageUrl: providedImageUrl, width: providedWidth, height: providedHeight }) => {
+        execute: async ({
+          prompt,
+          imageUrl: providedImageUrl,
+          width: providedWidth,
+          height: providedHeight,
+        }) => {
           // If the model provided an imageUrl that is just a placeholder (e.g. "[user provided image]")
           // fall back to the actual image that is currently active.
           let finalImageUrl = activeImageUrl;
@@ -41,59 +71,72 @@ export async function POST(req: Request) {
 
           if (!finalImageUrl) {
             return {
-              action: 'edit_image',
+              action: "edit_image",
               prompt,
               success: false,
-              error: 'No image available to edit',
-              message: 'Please upload an image first before requesting edits.'
+              error: "No image available to edit",
+              message: "Please upload an image first before requesting edits.",
             };
           }
-                      try {
-              const generateImageFunction = provider === 'modelscope' ? generateImageV2 : generateImage;
-              const result = await generateImageFunction({
-                imageUrl: finalImageUrl,
-                prompt,
-                width: finalWidth,
-                height: finalHeight,
-              });
+          try {
+            const generateImageFunction =
+              provider === "modelscope" ? generateImageV2 : generateImage;
+            const result = await generateImageFunction({
+              imageUrl: finalImageUrl,
+              prompt,
+              width: finalWidth,
+              height: finalHeight,
+            });
 
             if (result.success) {
               return {
-                action: 'edit_image',
+                action: "edit_image",
                 prompt,
                 imageUrl: result.url,
                 success: true,
-                message: `Successfully edited the image: "${prompt}". The new version has been created.`
+                message: `Successfully edited the image: "${prompt}". The new version has been created.`,
               };
             } else {
               return {
-                action: 'edit_image',
+                action: "edit_image",
                 prompt,
                 success: false,
                 error: result.error,
-                message: `Failed to edit the image: ${result.error}`
+                message: `Failed to edit the image: ${result.error}`,
               };
             }
           } catch (error) {
             return {
-              action: 'edit_image',
+              action: "edit_image",
               prompt,
               success: false,
-              error: error instanceof Error ? error.message : 'Unknown error',
-              message: `Error editing the image: ${error instanceof Error ? error.message : 'Unknown error'}`
+              error: error instanceof Error ? error.message : "Unknown error",
+              message: `Error editing the image: ${error instanceof Error ? error.message : "Unknown error"}`,
             };
           }
         },
       }),
-      
+
       generateSuggestions: tool({
-        description: 'Generate creative suggestions for image editing based on the current image and user context',
+        description:
+          "Generate creative suggestions for image editing based on the current image and user context",
         parameters: z.object({
-          imageUrl: z.string().optional().describe('The URL of the current image (defaults to current image)'),
-          context: z.string().optional().describe('Additional context about what the user is looking for'),
-          style: z.enum(['creative', 'professional', 'artistic', 'technical']).optional().describe('The style of suggestions to generate'),
+          imageUrl: z
+            .string()
+            .optional()
+            .describe(
+              "The URL of the current image (defaults to current image)",
+            ),
+          context: z
+            .string()
+            .optional()
+            .describe("Additional context about what the user is looking for"),
+          style: z
+            .enum(["creative", "professional", "artistic", "technical"])
+            .optional()
+            .describe("The style of suggestions to generate"),
         }),
-        execute: async ({ context = '', style = 'creative' }) => {
+        execute: async ({ context = "", style = "creative" }) => {
           const suggestionSets = {
             creative: [
               "Add magical sparkles and fairy lights",
@@ -101,7 +144,7 @@ export async function POST(req: Request) {
               "Add dramatic storm clouds in the background",
               "Apply a cyberpunk neon aesthetic",
               "Turn into a vintage poster design",
-              "Add fantasy elements like dragons or unicorns"
+              "Add fantasy elements like dragons or unicorns",
             ],
             professional: [
               "Enhance lighting for a professional headshot",
@@ -109,7 +152,7 @@ export async function POST(req: Request) {
               "Adjust colors for corporate branding",
               "Add subtle depth of field effect",
               "Improve skin tone and complexion",
-              "Create a clean, minimalist composition"
+              "Create a clean, minimalist composition",
             ],
             artistic: [
               "Convert to impressionist painting style",
@@ -117,7 +160,7 @@ export async function POST(req: Request) {
               "Apply oil painting texture",
               "Create a surreal dreamlike atmosphere",
               "Add artistic brush stroke effects",
-              "Transform into pop art style"
+              "Transform into pop art style",
             ],
             technical: [
               "Enhance image sharpness and clarity",
@@ -125,61 +168,78 @@ export async function POST(req: Request) {
               "Remove noise and grain",
               "Color correct for accurate reproduction",
               "Enhance shadow and highlight details",
-              "Apply professional retouching techniques"
-            ]
+              "Apply professional retouching techniques",
+            ],
           };
-          
+
           const baseSuggestions = suggestionSets[style];
-          const suggestions = context 
-            ? [...baseSuggestions.slice(0, 4), `Apply a ${context} style to the image`, `Create a ${context}-themed variation`]
+          const suggestions = context
+            ? [
+                ...baseSuggestions.slice(0, 4),
+                `Apply a ${context} style to the image`,
+                `Create a ${context}-themed variation`,
+              ]
             : baseSuggestions;
-          
+
           return {
-            action: 'suggestions',
+            action: "suggestions",
             suggestions: suggestions.slice(0, 6),
             style,
             context,
-            message: `Here are some ${style} editing suggestions for your image:`
+            message: `Here are some ${style} editing suggestions for your image:`,
           };
         },
       }),
 
       analyzeImage: tool({
-        description: 'Analyze the current image to understand its contents, style, and suggest relevant edits',
+        description:
+          "Analyze the current image to understand its contents, style, and suggest relevant edits",
         parameters: z.object({
-          imageUrl: z.string().optional().describe('The URL of the image to analyze (defaults to current image)'),
+          imageUrl: z
+            .string()
+            .optional()
+            .describe(
+              "The URL of the image to analyze (defaults to current image)",
+            ),
         }),
         execute: async () => {
           // This is a mock analysis - in a real implementation, you could use vision models
           return {
-            action: 'analysis',
+            action: "analysis",
             analysis: {
-              subject: 'The image contains various elements that can be enhanced',
-              lighting: 'Current lighting could be optimized',
-              composition: 'Composition has potential for improvement',
-              style: 'The style appears to be realistic',
+              subject:
+                "The image contains various elements that can be enhanced",
+              lighting: "Current lighting could be optimized",
+              composition: "Composition has potential for improvement",
+              style: "The style appears to be realistic",
               suggestions: [
-                'The lighting could be enhanced for better mood',
-                'Background elements could be refined',
-                'Color balance might benefit from adjustment',
-                'Adding visual interest to empty areas could improve composition'
-              ]
+                "The lighting could be enhanced for better mood",
+                "Background elements could be refined",
+                "Color balance might benefit from adjustment",
+                "Adding visual interest to empty areas could improve composition",
+              ],
             },
-            message: 'I\'ve analyzed your image and identified several areas for potential enhancement.'
+            message:
+              "I've analyzed your image and identified several areas for potential enhancement.",
           };
         },
       }),
 
       undoLastEdit: tool({
-        description: 'Provide guidance on reverting to a previous version of the image',
+        description:
+          "Provide guidance on reverting to a previous version of the image",
         parameters: z.object({
-          reason: z.string().optional().describe('Why the user wants to undo the edit'),
+          reason: z
+            .string()
+            .optional()
+            .describe("Why the user wants to undo the edit"),
         }),
-        execute: async ({ reason = '' }) => {
+        execute: async ({ reason = "" }) => {
           return {
-            action: 'undo_guidance',
-            message: 'To undo the last edit, you can navigate to a previous version using the thumbnail gallery on the left side of the screen. Use the arrow keys or click on an earlier version thumbnail to switch back.',
-            reason
+            action: "undo_guidance",
+            message:
+              "To undo the last edit, you can navigate to a previous version using the thumbnail gallery on the left side of the screen. Use the arrow keys or click on an earlier version thumbnail to switch back.",
+            reason,
           };
         },
       }),
@@ -187,8 +247,8 @@ export async function POST(req: Request) {
     system: `You are an AI image editing assistant with actual image editing capabilities. You help users edit and enhance their images through conversation and tool usage.
 
 CURRENT IMAGE CONTEXT:
-${sanitizedImageUrlForPrompt ? `- Current image: ${sanitizedImageUrlForPrompt}` : '- No image currently loaded'}
-${imageData ? `- Image dimensions: ${imageData.width}x${imageData.height}` : ''}
+${sanitizedImageUrlForPrompt ? `- Current image: ${sanitizedImageUrlForPrompt}` : "- No image currently loaded"}
+${imageData ? `- Image dimensions: ${imageData.width}x${imageData.height}` : ""}
 
 IMPORTANT CAPABILITIES:
 - You can actually edit images using the editImage tool - this creates real new versions

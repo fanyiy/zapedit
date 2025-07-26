@@ -12,6 +12,7 @@ import { Bot, Palette, CheckCircle, XCircle, Search, Undo2, Lightbulb } from 'lu
 interface ChatInterfaceProps {
   activeImageUrl: string | null;
   imageData: { width: number; height: number };
+  currentImageId?: string | null;
   selectedSuggestion?: string | null;
   onSuggestionUsed?: () => void;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
@@ -20,6 +21,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({ 
   activeImageUrl, 
   imageData = { width: 1024, height: 768 },
+  currentImageId,
   selectedSuggestion,
   onSuggestionUsed,
   onImageGenerated 
@@ -114,6 +116,12 @@ export function ChatInterface({
           
           processedToolCalls.current.add(toolCallId);
           const { imageUrl, prompt } = part.toolInvocation.result;
+          
+          // Save session to database if we have an image ID
+          if (currentImageId) {
+            saveEditSession(currentImageId, prompt, 'completed', imageUrl);
+          }
+          
           onImageGenerated?.(imageUrl, prompt);
           hasNewToolResult = true;
         }
@@ -124,7 +132,28 @@ export function ChatInterface({
     if (hasNewToolResult) {
       setTimeout(scrollToBottom, 200);
     }
-  }, [messages, onImageGenerated, scrollToBottom]);
+  }, [messages, onImageGenerated, scrollToBottom, currentImageId]);
+
+  // Function to save edit session to database
+  const saveEditSession = async (imageId: string, prompt: string, status: string, resultUrl?: string) => {
+    try {
+      await fetch('/api/sessions', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          imageId,
+          prompt,
+          status,
+          resultUrl,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save edit session:', error);
+      // Don't show error to user as this is background functionality
+    }
+  };
 
   if (!activeImageUrl) {
     return (
@@ -268,7 +297,7 @@ export function ChatInterface({
                                     body: { activeImageUrl, imageData }, 
                                     data: { message: suggestion } 
                                   })}
-                                  className="text-left text-xs p-2 bg-background border border-border rounded-lg hover:bg-muted transition-colors"
+                                  className="text-left text-xs p-2 bg-background border border-border rounded-lg hover:bg-muted transition-colors cursor-pointer"
                                 >
                                   {suggestion}
                                 </button>
