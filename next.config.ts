@@ -43,6 +43,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "i.ibb.co",
       },
+      {
+        protocol: "https",
+        hostname: "dashscope-result-wlcb.oss-cn-wulanchabu.aliyuncs.com",
+      },
     ],
   },
   serverExternalPackages: [],
