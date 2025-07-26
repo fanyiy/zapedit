@@ -6,7 +6,7 @@ import { eq, and } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { sessionId: string } }
+  { params }: { params: Promise<{ sessionId: string }> }
 ) {
   const session = await getServerSession(authOptions);
   
@@ -15,7 +15,7 @@ export async function GET(
   }
 
   try {
-    const sessionId = params.sessionId;
+    const { sessionId } = await params;
 
     // Get session with image data
     const sessionData = await db

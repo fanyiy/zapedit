@@ -30,7 +30,19 @@ interface Project {
 }
 
 interface EditingSessionsProps {
-  onProjectSelect: (project: Project) => void;
+  onProjectSelect: (project: {
+    imageId: string;
+    originalUrl: string;
+    width: number | null;
+    height: number | null;
+    sessions: Array<{
+      id: string;
+      prompt: string;
+      status: string;
+      resultUrl: string | null;
+      createdAt: string;
+    }>;
+  }) => void;
 }
 
 export function EditingSessions({ onProjectSelect }: EditingSessionsProps) {

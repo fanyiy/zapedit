@@ -231,37 +231,57 @@ export default function Home() {
   }
 
   // Handle project restoration from editing sessions
-  const handleProjectSelect = async (project: any) => {
+  const handleProjectSelect = async (project: {
+    imageId: string;
+    originalUrl: string;
+    width: number | null;
+    height: number | null;
+    sessions: Array<{
+      id: string;
+      prompt: string;
+      status: string;
+      resultUrl: string | null;
+      createdAt: string;
+    }>;
+  }) => {
     try {
       setImageLoading(true);
       
       // Set the image data first
-      setImageData({ width: project.width, height: project.height });
+      setImageData({ width: project.width || 1024, height: project.height || 768 });
       setCurrentImageId(project.imageId);
       
-          // Create images array from the project sessions
-    const completedSessions = project.sessions
-      .filter((session: any) => session.status === 'completed' && session.resultUrl)
-      .sort((a: any, b: any) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    
-    // Remove duplicates based on resultUrl
-    const uniqueSessions = completedSessions.filter((session: any, index: number, array: any[]) => 
-      array.findIndex(s => s.resultUrl === session.resultUrl) === index
-    );
-    
-    const projectImages = [
-      // Original image as version 0
-      {
-        url: project.originalUrl,
-        version: 0,
-      },
-      // Add all unique completed edits
-      ...uniqueSessions.map((session: any, index: number) => ({
-        url: session.resultUrl,
-        prompt: session.prompt,
-        version: index + 1,
-      }))
-    ];
+      // Create images array from the project sessions
+      type CompletedSession = {
+        id: string;
+        prompt: string;
+        status: string;
+        resultUrl: string;
+        createdAt: string;
+      };
+      
+      const completedSessions: CompletedSession[] = project.sessions
+        .filter((session): session is CompletedSession => session.status === 'completed' && session.resultUrl !== null)
+        .sort((a: CompletedSession, b: CompletedSession) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      
+      // Remove duplicates based on resultUrl
+      const uniqueSessions: CompletedSession[] = completedSessions.filter((session: CompletedSession, index: number, array: CompletedSession[]) => 
+        array.findIndex((s: CompletedSession) => s.resultUrl === session.resultUrl) === index
+      );
+      
+      const projectImages = [
+        // Original image as version 0
+        {
+          url: project.originalUrl,
+          version: 0,
+        },
+        // Add all unique completed edits
+        ...uniqueSessions.map((session: CompletedSession, index: number) => ({
+          url: session.resultUrl,
+          prompt: session.prompt,
+          version: index + 1,
+        }))
+      ];
       
       setImages(projectImages);
       
@@ -271,8 +291,8 @@ export default function Home() {
       // Preload the image
       await preloadNextImage({
         src: latestImage.url,
-        width: project.width,
-        height: project.height,
+        width: project.width || 1024,
+        height: project.height || 768,
       });
       
       setActiveImageUrl(latestImage.url);

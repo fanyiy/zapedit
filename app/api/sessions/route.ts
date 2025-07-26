@@ -4,6 +4,30 @@ import { authOptions } from "@/lib/auth";
 import { db, editSessions, images } from "@/lib/db";
 import { eq, desc, and } from "drizzle-orm";
 
+interface EditSession {
+  id: string;
+  prompt: string;
+  status: string;
+  resultUrl: string | null;
+  createdAt: Date;
+}
+
+interface Project {
+  imageId: string;
+  originalUrl: string;
+  width: number | null;
+  height: number | null;
+  imageCreatedAt: Date;
+  lastEditedAt: Date;
+  editCount: number;
+  latestEdit: {
+    prompt: string;
+    resultUrl: string | null;
+    createdAt: Date;
+  } | null;
+  sessions: EditSession[];
+}
+
 export async function GET() {
   const session = await getServerSession(authOptions);
   
@@ -43,6 +67,7 @@ export async function GET() {
           height: session.height,
           imageCreatedAt: session.imageCreatedAt,
           lastEditedAt: session.sessionCreatedAt,
+          editCount: 0,
           latestEdit: null,
           sessions: []
         };
@@ -68,16 +93,16 @@ export async function GET() {
       }
 
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, Project>);
 
     // Calculate editCount separately for each project by counting unique completed sessions
-    Object.values(sessionsByImage).forEach((project: any) => {
-      const completedSessions = project.sessions.filter((session: any) => 
+    Object.values(sessionsByImage).forEach((project: Project) => {
+      const completedSessions = project.sessions.filter((session: EditSession) => 
         session.status === 'completed' && session.resultUrl
       );
       
       // Remove duplicates based on resultUrl to get unique edits
-      const uniqueCompletedSessions = completedSessions.filter((session: any, index: number, array: any[]) => 
+      const uniqueCompletedSessions = completedSessions.filter((session: EditSession, index: number, array: EditSession[]) => 
         array.findIndex(s => s.resultUrl === session.resultUrl) === index
       );
       
@@ -86,7 +111,7 @@ export async function GET() {
 
     // Convert to array and sort by last edited date
     const projects = Object.values(sessionsByImage).sort(
-      (a: any, b: any) => new Date(b.lastEditedAt).getTime() - new Date(a.lastEditedAt).getTime()
+      (a: Project, b: Project) => new Date(b.lastEditedAt).getTime() - new Date(a.lastEditedAt).getTime()
     );
 
     return NextResponse.json({ projects });
