@@ -85,3 +85,14 @@ export const editSessions = pgTable("edit_sessions", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const sampleImages = pgTable("sample_images", {
+  id: text("id").primaryKey().$defaultFn(() => crypto.randomUUID()),
+  url: text("url").notNull(),
+  width: integer("width").notNull(),
+  height: integer("height").notNull(),
+  sortOrder: integer("sort_order").default(0),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});

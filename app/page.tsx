@@ -332,25 +332,25 @@ export default function Home() {
               <div className="grid grid-cols-12 gap-4 h-full">
                 
                 {/* Hero Section - Large card */}
-                <div className="col-span-7 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 border border-gray-700/50 flex items-center">
+                <div className="col-span-7 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 border border-gray-700/50 flex items-center">
                   <div className="text-left w-full">
-                    <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
+                    <h1 className="text-4xl font-semibold text-foreground mb-4 leading-tight">
                       Image editing that feels like
                       <br />
                       <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
                           conversation
                         </span>
                     </h1>
-                    <p className="text-gray-300 text-lg max-w-2xl leading-relaxed">
+                    <p className="text-muted-foreground text-lg max-w-2xl leading-relaxed">
                       Chat or speak your ideas, AI brings them to life. Natural, intuitive, and powerful.
                     </p>
                   </div>
                 </div>
 
                 {/* Upload Section - Medium card */}
-                <div className="col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                <div className="col-span-5 bg-card border border-border rounded-2xl p-6 overflow-hidden">
                   <div className="h-full flex flex-col">
-                    <h2 className="text-lg font-semibold text-foreground mb-3 flex-shrink-0">
+                    <h2 className="text-xl font-semibold text-foreground mb-4 flex-shrink-0">
                       Start Creating
                     </h2>
                     <div className="flex-1 min-h-0">
@@ -374,33 +374,26 @@ export default function Home() {
                 </div>
 
                 {/* Sample Images - Wide card */}
-                <div className="col-span-7 bg-card border border-border rounded-2xl p-4 overflow-hidden">
-                  <div className="h-full flex flex-col">
-                    <h2 className="text-lg font-semibold text-foreground mb-3 flex-shrink-0">
-                      Try Sample Images
-                    </h2>
-                    <div className="flex-1 min-h-0 overflow-y-auto">
-                      <SampleImages
-                        onAuthRequired={handleAuthRequired}
-                        onSelect={async ({ url, width, height }) => {
-                          setImageData({ width, height });
-                          setCurrentImageId(null); // Sample images don't have IDs yet
-                          setImages([{ url, version: 0 }]);
-                          setActiveImageUrl(url);
-                          // Preload the image for smooth display
-                          await preloadNextImage({
-                            src: url,
-                            width,
-                            height,
-                          });
-                        }}
-                      />
-                    </div>
-                  </div>
+                <div className="col-span-7 bg-card border border-border rounded-2xl p-6 overflow-hidden">
+                  <SampleImages
+                    onAuthRequired={handleAuthRequired}
+                    onSelect={async ({ url, width, height }) => {
+                      setImageData({ width, height });
+                      setCurrentImageId(null); // Sample images don't have IDs yet
+                      setImages([{ url, version: 0 }]);
+                      setActiveImageUrl(url);
+                      // Preload the image for smooth display
+                      await preloadNextImage({
+                        src: url,
+                        width,
+                        height,
+                      });
+                    }}
+                  />
                 </div>
 
                 {/* Recent Projects - Medium card */}
-                <div className="col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                <div className="col-span-5 bg-card border border-border rounded-2xl p-6 overflow-hidden">
                   <div className="h-full overflow-y-auto">
                     <EditingSessions 
                       onProjectSelect={(project) => {

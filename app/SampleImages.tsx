@@ -1,32 +1,16 @@
-import Image from "next/image";
+"use client";
 
-const sampleImages = [
-  {
-    url: "https://resources.modelscope.cn/aigc/image_edit.png",
-    width: 892,
-    height: 892,
-  },
-  {
-    url: "https://i.ibb.co/LdNQT9r4/image.png",
-    width: 1012,
-    height: 674,
-  },
-  {
-    url: "https://images.unsplash.com/photo-1751210392423-d8988823cb6d?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    width: 669,
-    height: 892,
-  },
-  {
-    url: "https://images.unsplash.com/photo-1751755360008-6c3f5fb1dad6?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxmZWF0dXJlZC1waG90b3MtZmVlZHwzNDh8fHxlbnwwfHx8fHw%3D",
-    width: 713,
-    height: 892,
-  },
-  {
-    url: "https://plus.unsplash.com/premium_photo-1752192844294-35fb57ae49be?w=900&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHx0b3BpYy1mZWVkfDF8dG93SlpGc2twR2d8fGVufDB8fHx8fA%3D%3D",
-    width: 792,
-    height: 528,
-  },
-];
+import Image from "next/image";
+import { useState, useEffect } from "react";
+
+interface SampleImage {
+  id: string;
+  url: string;
+  width: number;
+  height: number;
+  sortOrder: number;
+  isActive: boolean;
+}
 
 export function SampleImages({
   onSelect,
@@ -43,21 +27,114 @@ export function SampleImages({
   }) => void;
   onAuthRequired?: () => boolean;
 }) {
+  const [sampleImages, setSampleImages] = useState<SampleImage[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchSampleImages() {
+      try {
+        setIsLoading(true);
+        const response = await fetch('/api/sample-images');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch sample images');
+        }
+        
+        const images = await response.json();
+        setSampleImages(images);
+      } catch (err) {
+        console.error('Error fetching sample images:', err);
+        setError('Failed to load sample images');
+        
+        // Fallback to hardcoded images if API fails
+        setSampleImages([
+          {
+            id: "fallback-1",
+            url: "https://resources.modelscope.cn/aigc/image_edit.png",
+            width: 892,
+            height: 892,
+            sortOrder: 0,
+            isActive: true,
+          },
+          {
+            id: "fallback-2",
+            url: "https://i.ibb.co/LdNQT9r4/image.png",
+            width: 1012,
+            height: 674,
+            sortOrder: 1,
+            isActive: true,
+          },
+          {
+            id: "fallback-3",
+            url: "https://images.unsplash.com/photo-1751210392423-d8988823cb6d?q=80&w=1335&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
+            width: 669,
+            height: 892,
+            sortOrder: 2,
+            isActive: true,
+          },
+        ]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchSampleImages();
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="mb-4">
+          <h3 className="text-xl font-semibold text-foreground mb-2">
+            Sample images
+          </h3>
+          <p className="text-muted-foreground text-sm leading-relaxed">
+            Or try one of these examples
+          </p>
+        </div>
+        <div className="grid grid-cols-3 gap-4">
+          {[1, 2, 3].map((index) => (
+            <div
+              key={index}
+              className="aspect-[4/3] w-full rounded-xl bg-muted animate-pulse"
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  if (error && sampleImages.length === 0) {
+    return (
+      <div className="h-full flex flex-col">
+        <div className="mb-4">
+          <h3 className="text-lg font-medium text-white mb-2">
+            Sample images
+          </h3>
+          <p className="text-muted-foreground text-sm text-red-400">
+            Failed to load sample images. Please try again later.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="rounded-2xl border border-border bg-card p-6">
+    <div className="h-full flex flex-col">
       <div className="mb-4">
-        <h3 className="text-lg font-medium text-white mb-2">
+        <h3 className="text-xl font-semibold text-foreground mb-2">
           Sample images
         </h3>
-        <p className="text-muted-foreground text-sm">
+        <p className="text-muted-foreground text-sm leading-relaxed">
           Or try one of these examples
         </p>
       </div>
       <div className="grid grid-cols-3 gap-4">
         {sampleImages.map((sample, index) => (
           <button
-            key={sample.url}
-            className="group relative overflow-hidden rounded-xl border border-border hover:border-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer"
+            key={sample.id}
+            className="group relative overflow-hidden rounded-xl hover:ring-2 hover:ring-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer"
             onClick={() => {
               // Check authentication before selecting image
               if (onAuthRequired && !onAuthRequired()) {
@@ -79,7 +156,9 @@ export function SampleImages({
               className="aspect-[4/3] w-full object-cover"
             />
             <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-              <p className="text-white text-sm font-medium">Use this image</p>
+              <p className="text-white text-sm font-medium">
+                Use this image
+              </p>
             </div>
           </button>
         ))}
