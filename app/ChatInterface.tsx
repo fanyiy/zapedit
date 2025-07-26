@@ -299,16 +299,16 @@ export function ChatInterface({
                     return (
                       <div key={`${message.id}-${i}`} className={clsx(
                         "border rounded-xl p-3 mr-4",
-                        isSuccess ? "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800" :
-                        isError ? "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800" :
-                        "bg-muted/80 border-border"
+                        isSuccess ? "bg-green-900/20 border-green-500/30" :
+                        isError ? "bg-red-900/20 border-red-500/30" :
+                        "bg-gray-800/50 border-gray-600"
                       )}>
                         <div className="flex items-center gap-2 mb-2">
                           <div className={clsx(
                             "text-xs font-medium flex items-center gap-1",
-                            isSuccess ? "text-green-700 dark:text-green-300" :
-                            isError ? "text-red-700 dark:text-red-300" :
-                            "text-primary"
+                            isSuccess ? "text-green-400" :
+                            isError ? "text-red-400" :
+                            "text-blue-400"
                           )}>
                             {isSuccess ? <CheckCircle className="w-3 h-3" /> : 
                              isError ? <XCircle className="w-3 h-3" /> : 
@@ -318,7 +318,7 @@ export function ChatInterface({
                              'Editing Image'}
                           </div>
                         </div>
-                        <div className="text-xs text-foreground">
+                        <div className="text-xs text-gray-300">
                           {'result' in toolInvocation && toolInvocation.result?.message 
                             ? toolInvocation.result.message 
                             : `Applying: "${toolInvocation.args.prompt}"`}
@@ -329,12 +329,12 @@ export function ChatInterface({
 
                   if (toolInvocation.toolName === 'generateSuggestions') {
                     return (
-                      <div key={`${message.id}-${i}`} className="bg-muted/80 border border-border rounded-xl p-3 mr-4">
+                      <div key={`${message.id}-${i}`} className="bg-gray-800/50 border border-gray-600 rounded-xl p-3 mr-4">
                         <div className="flex items-center gap-2 mb-3">
-                          <Lightbulb className="w-3 h-3 text-primary" />
-                          <div className="text-xs text-primary font-medium">Creative Suggestions</div>
+                          <Lightbulb className="w-3 h-3 text-yellow-400" />
+                          <div className="text-xs text-yellow-400 font-medium">Creative Suggestions</div>
                         </div>
-                        <div className="space-y-2 text-xs text-foreground">
+                        <div className="space-y-2 text-xs text-gray-300">
                           {'result' in toolInvocation && toolInvocation.result?.suggestions && (
                             <div className="grid gap-2">
                               {toolInvocation.result.suggestions.map((suggestion: string, idx: number) => (
