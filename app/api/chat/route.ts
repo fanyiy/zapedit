@@ -1,7 +1,7 @@
 import { openai } from '@ai-sdk/openai';
 import { streamText, tool } from 'ai';
 import { z } from 'zod';
-import { generateImage, generateImageV2 } from '../../actions';
+import { generateImage } from '../../actions';
 
 export const maxDuration = 30;
 
