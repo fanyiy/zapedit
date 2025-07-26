@@ -4,6 +4,8 @@ import Image, { getImageProps } from "next/image";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { ImageUploader } from "./ImageUploader";
 import UserButton from "./components/auth/UserButton";
+import { useSession } from "next-auth/react";
+import { SignupModal } from "./components/auth/SignupModal";
 
 import Spinner from "./Spinner";
 import ScanningEffect from "./ScanningEffect";
@@ -29,6 +31,8 @@ type Image = {
 };
 
 export default function Home() {
+  const { data: session } = useSession();
+  const [showSignupModal, setShowSignupModal] = useState(false);
   const [images, setImages] = useState<Image[]>([]);
   const [currentImageId, setCurrentImageId] = useState<string | null>(null);
   const [imageData, setImageData] = useState<{
@@ -304,11 +308,19 @@ export default function Home() {
     }
   };
 
+  const handleAuthRequired = () => {
+    if (!session) {
+      setShowSignupModal(true);
+      return false;
+    }
+    return true;
+  };
+
   return (
     <>
-      {!activeImage ? (
+              {!activeImage ? (
         // Bento grid layout when no active image - Full screen, no scroll
-        <div className="h-screen bg-background overflow-hidden">
+        <div className="h-screen bg-background overflow-hidden min-w-[1200px]">
           <div className="h-full mx-auto max-w-7xl flex flex-col">
             {/* Header */}
             <div className="flex justify-end pt-4 pr-4 flex-shrink-0">
@@ -317,32 +329,33 @@ export default function Home() {
             
             {/* Bento Grid Container - Takes remaining height */}
             <div className="flex-1 p-4 min-h-0">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4 h-full">
+              <div className="grid grid-cols-12 gap-4 h-full">
                 
                 {/* Hero Section - Large card */}
-                <div className="md:col-span-8 lg:col-span-7 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 md:p-8 border border-gray-700/50 flex items-center">
-                  <div className="text-center md:text-left w-full">
-                    <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-white mb-4 leading-tight">
-                      Edit images
+                <div className="col-span-7 bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-8 border border-gray-700/50 flex items-center">
+                  <div className="text-left w-full">
+                    <h1 className="text-5xl font-bold text-white mb-4 leading-tight">
+                      Image editing that feels like
                       <br />
-                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                        with AI
-                      </span>
+                      <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
+                          conversation
+                        </span>
                     </h1>
-                    <p className="text-gray-300 text-base md:text-lg max-w-2xl leading-relaxed">
-                      Upload any image and describe the changes you want. Simple, fast, and powerful AI editing.
+                    <p className="text-gray-300 text-lg max-w-2xl leading-relaxed">
+                      Chat or speak your ideas, AI brings them to life. Natural, intuitive, and powerful.
                     </p>
                   </div>
                 </div>
 
                 {/* Upload Section - Medium card */}
-                <div className="md:col-span-4 lg:col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                <div className="col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
                   <div className="h-full flex flex-col">
                     <h2 className="text-lg font-semibold text-foreground mb-3 flex-shrink-0">
                       Start Creating
                     </h2>
                     <div className="flex-1 min-h-0">
                       <ImageUploader
+                        onAuthRequired={handleAuthRequired}
                         onUpload={async ({ id, url, width, height }) => {
                           setImageData({ width, height });
                           setCurrentImageId(id);
@@ -361,13 +374,14 @@ export default function Home() {
                 </div>
 
                 {/* Sample Images - Wide card */}
-                <div className="md:col-span-7 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                <div className="col-span-7 bg-card border border-border rounded-2xl p-4 overflow-hidden">
                   <div className="h-full flex flex-col">
                     <h2 className="text-lg font-semibold text-foreground mb-3 flex-shrink-0">
                       Try Sample Images
                     </h2>
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       <SampleImages
+                        onAuthRequired={handleAuthRequired}
                         onSelect={async ({ url, width, height }) => {
                           setImageData({ width, height });
                           setCurrentImageId(null); // Sample images don't have IDs yet
@@ -386,9 +400,14 @@ export default function Home() {
                 </div>
 
                 {/* Recent Projects - Medium card */}
-                <div className="md:col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
+                <div className="col-span-5 bg-card border border-border rounded-2xl p-4 overflow-hidden">
                   <div className="h-full overflow-y-auto">
-                    <EditingSessions onProjectSelect={handleProjectSelect} />
+                    <EditingSessions 
+                      onProjectSelect={(project) => {
+                        if (!handleAuthRequired()) return;
+                        handleProjectSelect(project);
+                      }} 
+                    />
                   </div>
                 </div>
 
@@ -507,7 +526,7 @@ export default function Home() {
                     {/* Clean Image Display Area */}
                     <div 
                       ref={imageContainerRef}
-                      className="flex-1 relative flex items-center justify-center touch-pan-y select-none bg-gray-900 rounded-xl overflow-hidden min-h-0"
+                      className="flex-1 relative flex items-center justify-center touch-pan-y select-none bg-gray-900 rounded-xl overflow-hidden min-h-0 group"
                       role="img"
                       aria-label={`Current image: version ${activeImage.version}${activeImage.prompt ? ` - ${activeImage.prompt}` : ''}`}
                     >
@@ -532,6 +551,18 @@ export default function Home() {
                           )}
                           priority
                         />
+
+                        {/* Prompt Hover Overlay */}
+                        {activeImage.prompt && (
+                          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none">
+                            <p className="text-xs font-medium uppercase tracking-wide mb-1 text-white/70">
+                              Prompt
+                            </p>
+                            <p className="text-sm leading-relaxed">
+                              {activeImage.prompt}
+                            </p>
+                          </div>
+                        )}
 
                         {/* Version Navigation Hints for Mobile */}
                         {images.length > 1 && (
@@ -565,20 +596,6 @@ export default function Home() {
                         )}
                       </div>
                     </div>
-
-                    {/* Prompt Display Below Image */}
-                    {activeImage.prompt && (
-                      <div className="mt-3 px-2">
-                        <div className="bg-muted/50 border border-border rounded-lg p-3">
-                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide mb-1">
-                            Prompt
-                          </p>
-                          <p className="text-xs text-foreground leading-relaxed" title={activeImage.prompt}>
-                            {activeImage.prompt}
-                          </p>
-                        </div>
-                      </div>
-                    )}
 
                     {/* Bottom section with suggestions */}
                     <div className="flex-shrink-0 space-y-3 mt-4">
@@ -647,6 +664,11 @@ export default function Home() {
             />
           </ResizablePanel>
         </ResizablePanelGroup>
+      )}
+      
+      {/* Signup Modal */}
+      {showSignupModal && (
+        <SignupModal onClose={() => setShowSignupModal(false)} />
       )}
     </>
   );

@@ -30,6 +30,7 @@ const sampleImages = [
 
 export function SampleImages({
   onSelect,
+  onAuthRequired,
 }: {
   onSelect: ({
     url,
@@ -40,6 +41,7 @@ export function SampleImages({
     width: number;
     height: number;
   }) => void;
+  onAuthRequired?: () => boolean;
 }) {
   return (
     <div className="rounded-2xl border border-border bg-card p-6">
@@ -57,6 +59,11 @@ export function SampleImages({
             key={sample.url}
             className="group relative overflow-hidden rounded-xl border border-border hover:border-muted-foreground transition-all duration-200 hover:scale-[1.02] cursor-pointer"
             onClick={() => {
+              // Check authentication before selecting image
+              if (onAuthRequired && !onAuthRequired()) {
+                return; // Authentication required, don't proceed
+              }
+              
               onSelect({
                 url: sample.url,
                 width: sample.width,

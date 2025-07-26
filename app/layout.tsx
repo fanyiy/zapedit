@@ -35,7 +35,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  width: "device-width",
+  width: 1200,
   initialScale: 1,
   maximumScale: 1,
   userScalable: false,
@@ -54,10 +54,28 @@ export default function RootLayout({
       </head>
       <body className="flex min-h-screen w-full flex-col antialiased">
         <Providers>
-          <main className="flex flex-1 flex-col">
-            {children}
-          </main>
-          <Toaster />
+          {/* Mobile blocking overlay - shows on screens smaller than 1200px */}
+          <div className="fixed inset-0 z-50 bg-black flex items-center justify-center p-6 xl:hidden">
+            <div className="text-center space-y-4">
+              <svg className="w-8 h-8 text-white mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+              <h1 className="text-xl text-white font-medium">
+                Please use a laptop
+              </h1>
+              <p className="text-gray-400 text-sm">
+                Mobile version in progress
+              </p>
+            </div>
+          </div>
+
+          {/* Main app content - hidden on mobile */}
+          <div className="hidden xl:flex xl:flex-col xl:flex-1">
+            <main className="flex flex-1 flex-col">
+              {children}
+            </main>
+            <Toaster />
+          </div>
         </Providers>
       </body>
     </html>

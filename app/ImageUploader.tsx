@@ -11,9 +11,10 @@ interface ImageUploaderProps {
     width: number;
     height: number;
   }) => void;
+  onAuthRequired?: () => boolean; // Returns true if authenticated, false if auth required
 }
 
-export function ImageUploader({ onUpload }: ImageUploaderProps) {
+export function ImageUploader({ onUpload, onAuthRequired }: ImageUploaderProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [pending, startTransition] = useTransition();
@@ -58,25 +59,39 @@ export function ImageUploader({ onUpload }: ImageUploaderProps) {
     });
   }
 
+  const handleClick = () => {
+    // Check authentication before opening file dialog
+    if (onAuthRequired && !onAuthRequired()) {
+      return; // Authentication required, don't proceed
+    }
+    fileInputRef.current?.click();
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    
+    // Check authentication before processing dropped file
+    if (onAuthRequired && !onAuthRequired()) {
+      return; // Authentication required, don't proceed
+    }
+    
+    const data = e.dataTransfer;
+    const file = data?.files?.[0];
+    if (file) {
+      handleUpload(file);
+    }
+  };
+
   return (
     <button
       onDragOver={(e) => e.preventDefault()}
-      onDrop={(e) => {
-        e.preventDefault();
-        setIsDragging(false);
-        const data = e.dataTransfer;
-        const file = data?.files?.[0];
-        if (file) {
-          handleUpload(file);
-        }
-      }}
+      onDrop={handleDrop}
       onDragEnter={() => setIsDragging(true)}
       onDragLeave={() => {
         setIsDragging(false);
       }}
-      onClick={() => {
-        fileInputRef.current?.click();
-      }}
+      onClick={handleClick}
       className={clsx(
         "relative flex aspect-[5/2] w-full cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed transition-all duration-200",
         isDragging
