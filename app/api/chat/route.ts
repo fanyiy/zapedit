@@ -93,6 +93,7 @@ export async function POST(req: Request) {
                 action: "edit_image",
                 prompt,
                 imageUrl: result.url,
+                originalImageUrl: finalImageUrl, // Include which image was edited
                 success: true,
                 message: `Successfully edited the image: "${prompt}". The new version has been created.`,
               };

@@ -11,6 +11,7 @@ interface VoiceInterfaceProps {
   imageData: { width: number; height: number };
   currentImageId?: string | null;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
+  onImageActivated?: (imageUrl: string) => void;
   onConnectionStatusChange?: (status: 'connecting' | 'connected' | 'disconnected' | 'error') => void;
   onToggleMode?: (voiceMode: boolean) => void;
 }
@@ -43,6 +44,7 @@ export function VoiceInterface({
   activeImageUrl, 
   imageData = { width: 1024, height: 768 },
   onImageGenerated,
+  onImageActivated,
   onConnectionStatusChange,
   onToggleMode
 }: VoiceInterfaceProps) {
@@ -100,6 +102,13 @@ export function VoiceInterface({
           
           if (result.success) {
             console.log('Edit successful, calling onImageGenerated:', result.imageUrl);
+            
+            // If the agent edited a different image than the currently active one,
+            // first make that image active so user can see which image was edited
+            if (result.originalImageUrl && result.originalImageUrl !== activeImageUrl && onImageActivated) {
+              onImageActivated(result.originalImageUrl);
+            }
+            
             onImageGenerated(result.imageUrl, prompt);
             return { 
               success: true, 
@@ -443,6 +452,7 @@ The user has an image loaded that you can edit using your tools.`
               isVoiceMode={true} 
               onToggle={onToggleMode}
               disabled={false}
+              disableVoice={true}
             />
           )}
         </div>
@@ -469,6 +479,7 @@ The user has an image loaded that you can edit using your tools.`
               isVoiceMode={true} 
               onToggle={onToggleMode}
               disabled={connectionStatus === 'connecting'}
+              disableVoice={true}
             />
           )}
         </div>

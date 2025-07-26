@@ -18,6 +18,7 @@ interface ChatInterfaceProps {
   selectedSuggestion?: string | null;
   onSuggestionUsed?: () => void;
   onImageGenerated: (imageUrl: string, prompt: string) => void;
+  onImageActivated?: (imageUrl: string) => void;
 }
 
 export function ChatInterface({ 
@@ -26,13 +27,21 @@ export function ChatInterface({
   currentImageId,
   selectedSuggestion,
   onSuggestionUsed,
-  onImageGenerated 
+  onImageGenerated,
+  onImageActivated
 }: ChatInterfaceProps) {
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   const processedToolCalls = React.useRef(new Set<string>());
   const [provider, setProvider] = React.useState<'fal' | 'modelscope'>('fal');
   const [isVoiceMode, setIsVoiceMode] = React.useState(false);
+
+  // Force back to text mode since voice is disabled
+  React.useEffect(() => {
+    if (isVoiceMode) {
+      setIsVoiceMode(false);
+    }
+  }, [isVoiceMode]);
 
   const {
     messages,
@@ -118,7 +127,13 @@ export function ChatInterface({
           }
           
           processedToolCalls.current.add(toolCallId);
-          const { imageUrl, prompt } = part.toolInvocation.result;
+          const { imageUrl, prompt, originalImageUrl } = part.toolInvocation.result;
+          
+          // If the agent edited a different image than the currently active one,
+          // first make that image active so user can see which image was edited
+          if (originalImageUrl && originalImageUrl !== activeImageUrl && onImageActivated) {
+            onImageActivated(originalImageUrl);
+          }
           
           // Save session to database if we have an image ID
           if (currentImageId) {
@@ -164,11 +179,12 @@ export function ChatInterface({
         {/* Mode Toggle Header */}
         <div className="p-4 border-b border-border/50">
           <div className="flex items-center justify-start">
-            <VoiceModeToggle 
-              isVoiceMode={isVoiceMode} 
-              onToggle={setIsVoiceMode}
-              disabled={false}
-            />
+                      <VoiceModeToggle 
+            isVoiceMode={isVoiceMode} 
+            onToggle={setIsVoiceMode}
+            disabled={false}
+            disableVoice={true}
+          />
           </div>
         </div>
         
@@ -202,6 +218,7 @@ export function ChatInterface({
         imageData={imageData}
         currentImageId={currentImageId}
         onImageGenerated={onImageGenerated}
+        onImageActivated={onImageActivated}
         onConnectionStatusChange={() => {}}
         onToggleMode={setIsVoiceMode}
       />
@@ -217,6 +234,7 @@ export function ChatInterface({
             isVoiceMode={isVoiceMode} 
             onToggle={setIsVoiceMode}
             disabled={isLoading}
+            disableVoice={true}
           />
         </div>
       </div>

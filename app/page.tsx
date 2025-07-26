@@ -633,6 +633,19 @@ export default function Home() {
               currentImageId={currentImageId}
               selectedSuggestion={selectedSuggestion}
               onSuggestionUsed={() => setSelectedSuggestion(null)}
+              onImageActivated={async (imageUrl: string) => {
+                // Make the specified image active (used when agent edits a specific image)
+                if (imageUrl !== activeImageUrl) {
+                  setImageLoading(true);
+                  await preloadNextImage({
+                    src: imageUrl,
+                    width: imageData.width,
+                    height: imageData.height,
+                  });
+                  setActiveImageUrl(imageUrl);
+                  setImageLoading(false);
+                }
+              }}
               onImageGenerated={async (imageUrl: string, prompt: string) => {
                 // Preload the new image
                 await preloadNextImage({

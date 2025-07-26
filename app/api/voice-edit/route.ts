@@ -26,6 +26,7 @@ export async function POST(req: Request) {
       return Response.json({
         success: true,
         imageUrl: result.url,
+        originalImageUrl: imageUrl, // Include which image was edited
         message: `Successfully edited the image: "${prompt}"`
       });
     } else {
